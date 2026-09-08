@@ -1,0 +1,13 @@
+export(adaptive_simex)
+export(nakamura_corrected_score)
+export(regression_calibration)
+export(simex_curve)
+export(cv_select)
+export(combined_weights)
+S3method(print, adaptive_simex)
+S3method(summary, adaptive_simex)
+S3method(confint, adaptive_simex)
+S3method(plot, adaptive_simex)
+importFrom(graphics, abline, points)
+importFrom(stats, model.frame, model.matrix, model.response, na.omit,
+           pnorm, qnorm, rnorm, sd, var)

@@ -1,0 +1,32 @@
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Scenario 1, small samples ($n=100$, $300$): bias, RMSE,
+and 95\% coverage of $\hat\beta_1$ ($M=1{,}000$).}
+\label{tab:scenario1-small}
+\begin{tabular}{l rrr rrr rrr}
+\toprule
+& \multicolumn{3}{c}{$\sigma^2_\epsilon = 0.1$} & \multicolumn{3}{c}{$\sigma^2_\epsilon = 0.5$} & \multicolumn{3}{c}{$\sigma^2_\epsilon = 1.0$} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+Method & Bias & RMSE & Cov. & Bias & RMSE & Cov. & Bias & RMSE & Cov. \\
+\midrule
+\multicolumn{10}{l}{\emph{$n = 100$}} \\
+Naive & -0.065 & 0.109 & 0.82 & -0.256 & 0.290 & 0.28 & -0.409 & 0.428 & 0.08 \\
+Regression calibration & 0.037 & 0.107 & 0.91 & 0.131 & 0.262 & 0.75 & 0.181 & 0.371 & 0.72 \\
+Corrected score & 0.031 & 0.118 & 0.86 & 0.049 & 0.837 & 0.96 & -0.351 & 0.915 & 0.67 \\
+Standard SIMEX & 0.001 & 0.107 & 0.90 & -0.065 & 0.215 & 0.76 & -0.197 & 0.283 & 0.73 \\
+Adaptive SIMEX (1-SE) & -0.002 & 0.103 & 0.90 & -0.104 & 0.211 & 0.72 & -0.241 & 0.303 & 0.62 \\
+Adaptive SIMEX (argmin) & -0.030 & 0.102 & 0.85 & -0.173 & 0.246 & 0.51 & -0.254 & 0.320 & 0.56 \\
+Oracle & -0.003 & 0.054 & 0.96 & -0.008 & 0.068 & 0.92 & -0.000 & 0.053 & 0.94 \\
+\midrule
+\multicolumn{10}{l}{\emph{$n = 300$}} \\
+Naive & -0.069 & 0.090 & 0.68 & -0.252 & 0.263 & 0.08 & -0.390 & 0.400 & 0.02 \\
+Regression calibration & 0.026 & 0.071 & 0.80 & 0.124 & 0.177 & 0.68 & 0.230 & 0.304 & 0.64 \\
+Corrected score & 0.004 & 0.070 & 0.86 & 0.064 & 0.200 & 0.88 & -0.449 & 1.663 & 0.82 \\
+Standard SIMEX & -0.009 & 0.072 & 0.84 & -0.070 & 0.130 & 0.78 & -0.159 & 0.206 & 0.69 \\
+Adaptive SIMEX (1-SE) & -0.013 & 0.069 & 0.84 & -0.103 & 0.147 & 0.73 & -0.208 & 0.242 & 0.47 \\
+Adaptive SIMEX (argmin) & -0.044 & 0.076 & 0.79 & -0.190 & 0.210 & 0.33 & -0.259 & 0.294 & 0.32 \\
+Oracle & 0.002 & 0.032 & 0.93 & -0.002 & 0.030 & 0.90 & 0.003 & 0.030 & 0.93 \\
+\bottomrule
+\end{tabular}
+\end{table}

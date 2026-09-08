@@ -1,0 +1,58 @@
+\documentclass{article}
+%\VignetteIndexEntry{Adaptive SIMEX: a quick tour}
+%\VignetteEngine{utils::Sweave}
+%\VignetteEncoding{UTF-8}
+\usepackage{amsmath}
+\SweaveOpts{concordance=FALSE}
+\begin{document}
+
+\title{Adaptive SIMEX for Poisson Regression: A Quick Tour}
+\author{Gaurav Garg and Ramakrushna Mishra}
+\maketitle
+
+This vignette illustrates the \texttt{adaptsimex} package on simulated
+data with known truth. The model is $Y_i \sim \text{Poisson}(\exp(\beta_0^\top
+X_i))$ with $p = 3$, and the observed covariate is $W_i = X_i +
+\varepsilon_i$ with $\varepsilon_i \sim N(0, 0.5 I)$.
+
+<<sim, echo=TRUE, results=hide>>=
+library(adaptsimex)
+set.seed(20260905)
+n <- 400
+beta0 <- c(0.3, 1, -0.5, 0.8)   # intercept plus three slopes
+sigma2 <- 0.5
+B1 <- numeric(200); B2 <- numeric(200)
+for (r in 1:200) {
+  X <- matrix(rnorm(n * 3), n, 3)
+  Y <- rpois(n, exp(0.3 + X %*% beta0[-1]))
+  W <- X + matrix(rnorm(n * 3), n, 3) * sqrt(sigma2)
+  df <- data.frame(Y = Y, W1 = W[, 1], W2 = W[, 2], W3 = W[, 3])
+  fit <- adaptive_simex(Y ~ W1 + W2 + W3, data = df,
+    me_vars = c("W1", "W2", "W3"),
+    sigma_error = rep(sqrt(sigma2), 3),
+    n_simex = 50, n_cv_simex = 15, seed = r, verbose = FALSE)
+  B1[r] <- fit$coefficients["W1"]
+  B2[r] <- coef(glm(Y ~ W1 + W2 + W3, family = poisson,
+                    data = df))["W1"]
+}
+@
+Average bias across the 200 repetitions: A-SIMEX
+\Sexpr{round(mean(B1 - 1), 4)} versus naive
+\Sexpr{round(mean(B2 - 1), 4)} for $\beta_1 = 1$; the naive
+attenuation is visible and the correction removes most of it.
+
+\begin{figure}
+\centering
+<<biasfig, echo=FALSE, fig=TRUE>>=
+par(mar = c(4, 4, 2, 1))
+plot(1:200, B1 - 1, pch = 16, cex = .6, col = "#d7301f",
+     xlab = "repetition", ylab = expression(hat(beta)[1] - beta[1]),
+     main = "A-SIMEX vs naive")
+points(1:200, B2 - 1, pch = 1, cex = .6, col = "#777777")
+abline(h = 0, lty = 2)
+legend("topright", c("A-SIMEX", "naive"), pch = c(16, 1),
+       col = c("#d7301f", "#777777"))
+@
+\end{figure}
+
+\end{document}

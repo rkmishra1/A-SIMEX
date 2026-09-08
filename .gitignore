@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# R package check build output (regenerable via R CMD check)
+adaptsimex/adaptsimex.Rcheck/

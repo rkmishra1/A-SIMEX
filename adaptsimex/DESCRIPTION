@@ -1,0 +1,22 @@
+Package: adaptsimex
+Type: Package
+Title: Adaptive SIMEX for Poisson Regression with Classical Measurement
+    Error
+Version: 0.1.0
+Authors@R: c(
+    person("Gaurav", "Garg", email = "ggarg@iiml.ac.in",
+           role = c("aut", "cre")),
+    person("Ramakrushna", "Mishra", role = "aut"))
+Description: Adaptive SIMEX (A-SIMEX) corrects covariate measurement
+    error in Poisson regression by simulation extrapolation with
+    cross-validated hyperparameters (extrapolation region and polynomial
+    degree, one-standard-error parsimony rule), a two-stage ridge
+    extrapolation, and an analytic sandwich variance estimator that
+    decomposes into data and simulation components. Also provides the
+    Nakamura (1990) corrected score and regression calibration
+    competitors. Methods and evidence: Garg and Mishra, "Adaptive SIMEX
+    for Poisson Regression with Classical Measurement Error".
+License: GPL-3
+Encoding: UTF-8
+Imports: stats, graphics
+Suggests: testthat

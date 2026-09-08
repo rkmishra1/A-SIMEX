@@ -1,0 +1,550 @@
+% ===========================================================================
+% Adaptive SIMEX for Poisson Regression with Classical Measurement Error:
+% Theory, Methods, and Applications  ---  REVISED MANUSCRIPT (JoE format)
+% Gaurav Garg, Ramakrushna Mishra
+% elsarticle class; compile pdflatex x2
+% ===========================================================================
+\documentclass[3p,11pt]{elsarticle}
+\journal{Journal of Econometrics}
+\biboptions{authoryear,round}
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{booktabs,graphicx}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue]{hyperref}
+\graphicspath{{../results/}}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{remark}{Remark}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\bet}{\bm{\beta}}
+\newcommand{\bu}{\bm{u}}
+\newcommand{\bw}{\bm{w}}
+\newcommand{\bW}{\bm{W}}
+\newcommand{\bX}{\bm{X}}
+\newcommand{\bY}{\bm{Y}}
+\newcommand{\beps}{\bm{\varepsilon}}
+\newcommand{\bSig}{\bm{\Sigma}}
+\newcommand{\bPhi}{\bm{\Phi}}
+\newcommand{\bphi}{\bm{\phi}}
+\newcommand{\btH}{\bm{H}}
+\newcommand{\btV}{\bm{V}}
+\newcommand{\bI}{\bm{I}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\providecommand{\cmark}{\checkmark}
+\providecommand{\xmark}{$\times$}
+\newcommand{\asimex}{\textup{A-SIMEX}}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Adaptive SIMEX for Poisson Regression with Classical
+Measurement Error: Theory, Methods, and Applications}
+
+\author[iiml]{Gaurav Garg\corref{cor1}}
+\ead{ggarg@iiml.ac.in}
+\author[iiml]{Ramakrushna Mishra}
+\affiliation[iiml]{organization={Decision Sciences Area,
+  Indian Institute of Management Lucknow},
+  addressline={Prabandh Nagar},
+  city={Lucknow}, postcode={226013}, state={Uttar Pradesh},
+  country={India}}
+\cortext[cor1]{Corresponding author.}
+
+\begin{abstract}
+Poisson regression is widely used for count outcomes, but covariates are
+frequently observed with classical measurement error, and the resulting
+naive estimates are attenuated with invalid confidence intervals. We
+develop Adaptive SIMEX (A-SIMEX), which automates the two ad-hoc choices
+of SIMEX, namely the extrapolation region and the polynomial degree, by
+cross-validation with a one-standard-error parsimony rule, adds a
+ridge-corrected second extrapolation stage, and is accompanied by
+complete asymptotic theory: consistency under a growing-degree regime
+that we make explicit; asymptotic normality with an exact decomposition
+of the asymptotic variance into data and simulation components (the
+latter vanishing at rate $B^{-1}$ in the number of simulation
+replicates); and efficiency results relative to the oracle estimator,
+including an information-monotonicity lemma showing that no estimator
+based on noisy covariates can improve on the oracle to first order,
+while the second-order efficiency comparison is signed neither way. The
+theory corrects several claims of earlier SIMEX treatments and resolves
+the tension between consistency (which requires the polynomial degree to
+grow like $\log n$) and inference through an explicit window condition
+on the degree growth rate. In simulation studies with $1{,}000$ Monte
+Carlo repetitions per design cell, including misspecified (Laplace)
+error, negative-binomial outcomes, error variance estimated from
+replicated measures, and corrected-score and regression-calibration
+competitors, A-SIMEX removes most of the naive attenuation with valid
+inference when the error is moderate, and we identify an important
+limitation of automatic tuning: held-out prediction on the observed
+scale systematically under-extrapolates when the error is large,
+because its population minimizer is the naive pseudo-parameter. We
+characterize the resulting bias--variance trade-off, quantify the
+efficiency premium of extrapolation against the oracle, and give
+practical remedies. The methods are implemented in an open-source R
+package with an analytic sandwich variance estimator that we validate
+against the parametric bootstrap, and are applied to NHANES 2017--2018,
+where the measurement error is directly measurable: self-reported
+weight in a model for the count of prescription medications. All
+results are reproducible from a documented archive with fixed seeds.
+
+\end{abstract}
+
+\begin{keyword}
+measurement error \sep SIMEX \sep Poisson regression \sep asymptotic
+theory \sep generalized linear models \sep replication archive
+\JEL I13 \sep C21 \sep C25
+\end{keyword}
+
+\end{frontmatter}
+
+% ---------------------------------------------------------------------------
+\section{Introduction}\label{sec:intro}
+
+Economists measure the covariates they regress on, and the
+measurements are frequently wrong. In labor and health economics,
+self-reported income, earnings, and weight differ from administrative
+records in well-documented ways, and the resulting demand and health
+production estimates inherit the discrepancy
+\citep{griliches1986,bound2001}. In demand systems estimated from
+household surveys, reported consumption shares are noisy versions of
+the expenditures that economic theory needs, so price and income
+elasticities are biased in unknown directions. In policy evaluation,
+treatment intensity and exposure are measured by program records or
+monitors that misreport systematically, misclassifying the very
+variable whose effect is of interest
+\citep{mahajan2006,hu2008}. Many of the resulting outcome variables,
+from doctor visits to patent counts to crime incidents, are counts,
+and the Poisson regression model with its overdispersed extensions is
+the standard tool for them \citep{mullahy1986,cameron2013,
+winkelmann2008}. A long econometric literature documents that
+plugging mismeasured covariates into nonlinear models attenuates
+estimates, inflates variances, and destroys interval coverage
+\citep{hausman2001,bound2001}; Section~\ref{sec:sims1} quantifies the
+damage cell by cell for the Poisson case.
+
+In nonlinear models the problem is structurally different from the
+familiar regression-dilution algebra of the linear model. The
+pseudo-true parameter of the naive fit is defined only implicitly,
+through a nonlinear moment condition that mixes the error variance
+with the moment-generating function of $X$ evaluated at the parameter
+itself; the attenuation is therefore not a simple constant and is not
+sign-monotone in all directions
+(Lemma~\ref{lem:curve}(iii) computes it exactly to first order).
+Classical measurement error in GLMs is the setting of a substantial
+statistics literature \citep{carroll2006}, and econometric work has
+developed semiparametric and identification-based alternatives
+\citep{lewbel1997,schennach2004,mahajan2006,hu2008}; yet for the
+applied count regression the practical menu remains short, and
+simulation-based corrections of the SIMEX type are far better known in
+biostatistics than in economics \citep{nakamura1990,cook1994}. This
+paper is written for the applied econometrician who has a count
+outcome, a mismeasured regressor, and either an external estimate of
+the error variance or replicated measurements, and who needs a
+correction that is automatic, documented, and honest about its own
+limits.
+
+Simulation extrapolation (SIMEX; \citealp{cook1994,stefanski1995}) is
+arguably the most practical member of the correction toolkit: it makes
+no model for the distribution of $X$, requires only the error
+variance, reduces the correction to a sequence of ordinary GLM fits,
+and extends mechanically to misclassification
+\citep{kuechenhoff2006} and semiparametric settings
+\citep{apanasovich2009}. Yet SIMEX as usually practiced leaves the two
+consequential choices, the extrapolation region and the polynomial
+degree, to the analyst, offers no rigorous asymptotic theory for
+GLM settings, and provides no closed-form standard errors. Table~\ref{tab:gap}
+summarizes where the available approaches stand against the
+desiderata that motivate this paper: automatic tuning, formal
+asymptotics, usable inference machinery, freedom from validation
+data, and scalability to moderate dimensions. The table makes clear
+that no existing method occupies the full row that an applied
+econometrician needs; it also previews our claim that A-SIMEX fills
+the row, with one honest asterisk, namely that its automatic
+tuning inherits a documented under-extrapolation bias when the
+measurement error is large (Section~\ref{sec:sims1}).
+
+\begin{table}[t]
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Available approaches to Poisson (GLM) regression with
+classical covariate measurement error, against the desiderata
+motivating this paper. ``Automatic'' = no analyst-chosen
+smoothing/extrapolation tuning; ``Inference'' = analytic standard
+errors beyond point estimation. Superscripts flag caveats discussed in
+the text and quantified in Section~\ref{sec:sims}.}
+\label{tab:gap}
+\begin{tabular}{p{5.6cm}ccccc}
+\toprule
+ & Automatic & Consistency & Inference & No validation & Moderate-$p$ \\
+ &  & theory & machinery & data required & scalable \\
+\midrule
+Naive MLE \citep{fuller1987} & \cmark & $^{\mathrm{a}}$ & \xmark & \cmark & \cmark \\
+Regression calibration \citep{prentice1982,rosner1989} & \cmark & $^{\mathrm{b}}$ & approximate & \cmark & \cmark \\
+Corrected score \citep{nakamura1990} & \cmark & \cmark & \cmark & \cmark & $^{\mathrm{c}}$ \\
+Deconvolution / functional \citep{fan1991,delaigle2008} & \xmark & \cmark & \xmark & \cmark & \xmark \\
+Validation likelihood \citep{qin2000,chen2011} & \cmark & \cmark & \cmark & \xmark & \cmark \\
+Bayesian hierarchical ME \citep{richardson1993,berry2002} & \cmark & $^{\mathrm{d}}$ & posterior & \xmark & \xmark \\
+Standard SIMEX \citep{cook1994,stefanski1995} & \xmark & \xmark & bootstrap only & \cmark & \cmark \\
+\midrule
+\asimex{} (this paper) & \cmark$^{\mathrm{e}}$ & \cmark & \cmark & \cmark & \cmark \\
+\bottomrule
+\end{tabular}
+
+{\footnotesize\emph{Notes.} SIMEX extensions to misclassification and
+semiparametric settings: \citet{kuechenhoff2006} and
+\citet{apanasovich2009}, respectively. Deconvolution rates:
+\citet{fan1993}.
+$^{\mathrm{a}}$consistent for the naive pseudo-parameter $\beta(1)$,
+not for $\bet_0$ (Lemma~\ref{lem:curve}).
+$^{\mathrm{b}}$approximate bias correction whose error is first order
+in the error variance (Section~\ref{sec:sims1}).
+$^{\mathrm{c}}$RMSE deteriorates sharply when many coefficients are
+weakly identified (Section~\ref{sec:sims3}).
+$^{\mathrm{d}}$posterior consistency known in special cases.
+$^{\mathrm{e}}$the CV criterion systematically under-extrapolates when
+the error is large, a limitation we document and quantify rather
+than suppress (Section~\ref{sec:sims1}).}
+\end{table}
+
+This paper develops Adaptive SIMEX (A-SIMEX) and subjects it to a
+level of scrutiny that we argue should be standard for
+bias-correction methods. Our contributions are as follows.
+
+\begin{enumerate}\itemsep3pt
+\item \textbf{Automated hyperparameter selection, with its limits
+      quantified.} Extrapolation region and polynomial degree are
+      selected by $k$-fold cross-validation of the held-out Poisson
+      deviance, with a one-standard-error parsimony rule. This removes
+      subjectivity and is fully reproducible. Our simulations,
+      however, reveal a structural limitation that we do not paper
+      over: the population minimizer of the observed-scale CV criterion
+      is the naive pseudo-parameter $\beta(1)$, not $\beta_0$, so CV
+      systematically under-extrapolates when the measurement error is
+      large (Section~\ref{sec:sims1}). Automatic tuning is a solution
+      for small-to-moderate error and a documented failure mode for
+      large error, for which we propose deconvolution-aware remedies.
+\item \textbf{A bias-corrected two-stage extrapolation and an exact
+      variance estimator.} The primary polynomial fit is stabilized by
+      a ridge second stage, and inference uses an analytic sandwich
+      that decomposes the asymptotic variance exactly into a
+      \emph{data} component and a \emph{simulation} component of order
+      $B^{-1}$; this decomposition corrects the additive
+      ``parameter-plus-extrapolation'' split that appears in earlier
+      SIMEX treatments, and it extends robustly to overdispersed
+      outcomes and to estimated error variance
+      (Sections~\ref{sec:sims-nb} and~\ref{sec:sims-sigma2}).
+\item \textbf{Complete and corrected asymptotic theory.} We prove
+      consistency and asymptotic normality of the A-SIMEX estimator, a
+      growing-degree central limit theorem that reconciles the
+      $\log n$ degree growth needed for consistency with centered
+      inference through an explicit window condition on the
+      analyticity margin, and oracle-efficiency results comprising an
+      information-monotonicity lemma (no estimator based on noisy
+      covariates beats the oracle to first order) and an explicit
+      second-order expansion whose sign is design-dependent. Along the
+      way we correct three claims that circulate informally for SIMEX:
+      the exactness of the extrapolation target, the form of the
+      variance decomposition, and the sign of the second-order
+      efficiency loss.
+\item \textbf{Evidence at replication standard.} All simulations
+      ($1{,}000$ Monte Carlo repetitions per cell) and the application
+      are generated by a single seed-fixed pipeline; the paper reports
+      what the pipeline produces, including results that are
+      unflattering to the method.
+\end{enumerate}
+
+The methods are implemented in an open-source R package, and every
+number in the paper is regenerable from a documented archive with
+fixed seeds. The plan is as follows. Section~\ref{sec:background}
+reviews the model and standard SIMEX. Section~\ref{sec:method}
+presents A-SIMEX: cross-validated selection of
+$(\lambda_{\max},\text{degree})$ (Section~\ref{sec:cv}), the ridge
+second stage (Section~\ref{sec:ridge}), and the analytic sandwich
+variance estimator (Section~\ref{sec:var}). Section~\ref{sec:theory}
+states the main results: the population SIMEX curve and its
+analyticity (Lemma~\ref{lem:curve}), the consistency theorem
+(Theorem~\ref{thm:cons}), asymptotic normality with the exact
+variance decomposition (Theorem~\ref{thm:an},
+Corollary~\ref{cor:var}), the growing-degree central limit theorem
+(Theorem~\ref{thm:grow}), and the oracle-efficiency results
+(Lemma~\ref{lem:info}, Theorem~\ref{thm:are}). Section~\ref{sec:sims}
+reports the simulation studies; Section~\ref{sec:app} the application
+to NHANES 2017--2018; Section~\ref{sec:software} the software;
+Section~\ref{sec:discussion} limitations and extensions. Complete
+proofs are in the Supplementary Material.
+
+\label{sec:contrib}\label{sec:roadmap}
+
+% ---------------------------------------------------------------------------
+\section{Background and Setup}\label{sec:background}
+
+\subsection{Poisson Regression}\label{sec:poisson}
+
+We observe $n$ independent subjects $i=1,\dots,n$ with count outcome
+$Y_i\in\N_0$ and covariate vector $X_i\in\R^p$. The Poisson regression
+model specifies
+\begin{equation}\label{eq:model}
+  Y_i\mid X_i\;\sim\;\mathrm{Poisson}(\mu_i),
+  \qquad \mu_i=\exp\bigl(X_i^\top\bet_0\bigr),
+\end{equation}
+where $\bet_0\in\Theta\subset\R^p$ is the parameter of interest, with
+log-likelihood
+\begin{equation}\label{eq:loglik}
+  \ell_n(\bet)=\sum_{i=1}^{n}\Bigl\{Y_i\,X_i^\top\bet
+  -\exp\bigl(X_i^\top\bet\bigr)\Bigr\}.
+\end{equation}
+The oracle maximum likelihood estimator
+$\hat\beta_{\mathrm{oracle}}$, infeasible because it requires
+$X_i$, solves $\nabla\ell_n(\bet)=\bm 0$ and is asymptotically
+normal with variance equal to the inverse Fisher information.
+
+\subsection{Classical Measurement Error Model}\label{sec:me}
+
+In practice we observe only a noisy version,
+\begin{equation}\label{eq:cme}
+  W_i=X_i+\beps_i,
+\end{equation}
+with $\beps_i\sim N(\bm 0,\bSig_\epsilon)$ independent of $(X_i,Y_i)$
+and $\bSig_\epsilon=\operatorname{diag}
+(\sigma^2_{\epsilon,1},\dots,\sigma^2_{\epsilon,p})$ assumed known or
+consistently estimable from auxiliary data (validation subsamples or
+replicated measurements; Section~\ref{sec:sims-sigma2} implements the
+latter).
+
+\begin{assumption}[Classical error structure]\label{ass:cme}
+$\beps_i\sim N(\bm 0,\bSig_\epsilon)$ independently across $i$,
+independent of $(X_i,Y_i)$; $\bSig_\epsilon$ is known (or
+consistently estimated).
+\end{assumption}
+
+\subsection{The Naive Estimator and Its Bias}\label{sec:naive}
+
+Fitting the Poisson GLM with $W_i$ in place of $X_i$ yields the naive
+MLE $\hat\beta_{\mathrm{naive}}$, which is attenuated toward zero. The
+attenuation is characterized exactly in
+Lemma~\ref{lem:curve}(iii) below: the pseudo-true parameter of the
+naive fit is $\beta(1)=\bet_0+\tilde\bet+O(\|\bSig_\epsilon\|^2)$,
+with first-order bias
+\begin{equation}\label{eq:naivebias}
+  \tilde\bet
+  =-\bm I_X(\bet_0)^{-1}\Bigl[
+    \tfrac12\bigl(\bet_0^\top\bSig_\epsilon\bet_0\bigr)\,
+    \E\bigl(e^{X_i^\top\bet_0}X_i\bigr)
+    +\bSig_\epsilon\bet_0\,\E\bigl(e^{X_i^\top\bet_0}\bigr)\Bigr],
+\end{equation}
+where $\bm I_X(\bet_0)=\E\bigl[e^{X_i^\top\bet_0}X_iX_i^\top\bigr]$ is
+the oracle information. For $p=1$, $X\sim N(0,1)$ this gives
+$\tilde\beta=-\sigma^2_\epsilon\beta_0(1+\beta_0^2/2)/(1+\beta_0^2)<0$
+for $\beta_0>0$: attenuation, with the same first-order structure the
+linear model is famous for but governed by the moment-generating
+function of $X$ at $\bet_0$ rather than by a closed-form dilution
+factor.
+
+\subsection{Standard SIMEX}\label{sec:stdsimex}
+
+Simulation extrapolation \citep{cook1994} augments the observed error
+artificially and extrapolates backward:
+
+\begin{center}
+\small
+\begin{tabular}{ll}
+\toprule
+& \textbf{Algorithm 1 (Standard SIMEX)}\\
+\midrule
+\multicolumn{2}{l}{\textbf{Require:} data $(Y_i,W_i)$; assumed
+$\bSig_\epsilon$; grid $\Lambda=\{\lambda_0=0<\cdots<\lambda_K\}$;
+$B$ replicates.}\\
+1 & \textbf{for} each $\lambda\in\Lambda$, $b=1,\dots,B$:\\
+2 & \quad draw $Z_{ib}\sim N(\bm 0,\bSig_\epsilon)$ i.i.d., set
+$W_i^{(b)}(\lambda)=W_i+\sqrt{\lambda}\,Z_{ib}$;\\
+3 & \quad fit the Poisson GLM of $Y_i$ on
+$W_i^{(b)}(\lambda)$, obtaining $\hat\beta_b(\lambda)$;\\
+4 & \quad average: $\bar\beta(\lambda)=B^{-1}\sum_b\hat\beta_b(\lambda)$.\\
+5 & \textbf{Extrapolate:} fit $p(\lambda)=a+b\lambda+c\lambda^2$ to
+$(\lambda_j,\bar\beta(\lambda_j))$ and report
+$\hat\beta_{\mathrm{SIMEX}}=p(-1)$.\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The intuition: increasing $\lambda$ compounds the error, moving
+$\bar\beta(\lambda)$ further from $\bet_0$ along a smooth bias curve;
+extrapolating to $\lambda=-1$ ``removes'' the original error.
+Section~\ref{sec:population} makes this precise: the population curve
+$\beta(\lambda)$ depends on the error only through the \emph{total}
+variance $(1+\lambda)\bSig_\epsilon$, is real-analytic in $\lambda$,
+and satisfies $\beta(-1)=\bet_0$ exactly, but the naive reading
+``$W(-1)=W-\epsilon=X$'' is wrong (the simulated noise is independent
+of the observed error and cannot be subtracted), a distinction that
+matters for every formal claim.
+
+\subsection{Limitations of Standard SIMEX}\label{sec:limitations}
+
+\begin{enumerate}\itemsep2pt
+\item \emph{Ad-hoc hyperparameters:} the grid $\Lambda$ and the
+      polynomial degree are chosen by hand, with no principled
+      guidance and consequences for reproducibility.
+\item \emph{Extrapolation instability:} polynomial extrapolation from
+      $[0,\lambda_{\max}]$ to $\lambda=-1$ amplifies noise (by a
+      factor governed by the weights $\sum_j|c_j|$; see
+      Theorem~\ref{thm:are}), and high-degree polynomials oscillate
+      outside the fitted range.
+\item \emph{No formal asymptotics:} the bias, variance, and coverage
+      properties of $\hat\beta_{\mathrm{SIMEX}}$ had not been
+      rigorously characterized for GLMs; existing analyses are
+      heuristic.
+\item \emph{Computational cost:} $B\times|\Lambda|$ GLM fits per
+      evaluation, burdensome when $p$ is moderate, though
+      The Supplementary Material (Section~S2) shows that batching and warm
+      starts reduce this to seconds.
+\end{enumerate}
+
+\subsection{Related Work}\label{sec:related}
+
+Corrected score equations \citep{nakamura1990} replace the score by an
+estimate whose conditional expectation given $(X,Y)$ is the true
+score; they require the error distribution (as SIMEX does) rather than
+a model for $\Pr(X\mid W)$, but their variance explodes when many
+coefficients are weakly identified (Section~\ref{sec:sims3}).
+Deconvolution and functional methods \citep{fan1993,delaigle2008}
+estimate the density of $X$ from $W$ nonparametrically; they are
+elegant but ill-posed and hard to scale. Empirical likelihood
+\citep{qin2000} can incorporate validation data but requires the
+validation sample itself. Our empirical comparisons include the first
+two families (Sections~\ref{sec:sims1}--\ref{sec:sims3}); the variance
+estimation from replicated measures covers the third's typical data
+structure.
+
+% ---------------------------------------------------------------------------
+\section{Adaptive SIMEX: Method and Implementation}\label{sec:method}
+
+\subsection{Data-Driven Hyperparameter Selection via
+Cross-Validation}\label{sec:cv}
+
+The core innovation of A-SIMEX is to treat the extrapolation region
+and polynomial degree as tuning parameters selected by $k$-fold
+cross-validation using prediction loss on held-out data.
+
+\subsubsection*{Cross-validation objective}
+
+Partition the data into $K_{\mathrm{fold}}$ folds (typically five). For
+a candidate pair $(\lambda_{\max},p_{\mathrm{deg}})$:
+
+\emph{Fit stage.} For fold $k$, using data excluding fold $k$, run
+Algorithm~1 with extrapolation grid $\{0,0.5,1,\dots,\lambda_{\max}\}$ and
+degree $p_{\mathrm{deg}}$, obtaining the extrapolated estimate
+$\hat\beta^{(-k)}$. Within a fold, the curve on the union grid is
+fitted once and each candidate $\lambda_{\max}$ is evaluated on the
+corresponding prefix (the \emph{prefix property}), with noise
+draws shared across $\lambda$ within a replicate.
+
+\emph{Prediction stage.} On the held-out fold, compute the Poisson
+deviance of the fitted counts
+$\hat Y_{i,k}=\exp(W_{i,k}^\top\hat\beta^{(-k)})$:
+\begin{equation}\label{eq:cv}
+  D_k(\lambda_{\max},p_{\mathrm{deg}})
+  =2\sum_{i\in\text{fold }k}\Bigl[
+    Y_i\log\frac{Y_i}{\hat Y_{i,k}}-\bigl(Y_i-\hat Y_{i,k}\bigr)\Bigr],
+\end{equation}
+with the convention $0\log0=0$, and aggregate
+$\mathrm{CV}(\lambda_{\max},p_{\mathrm{deg}})
+=K_{\mathrm{fold}}^{-1}\sum_kD_k$. The selected pair minimizes
+$\mathrm{CV}$; when candidates lie within one standard error of the
+minimum, the \emph{parsimonious} choice (smaller degree, then smaller
+$\lambda_{\max}$) is preferred. Section~\ref{sec:sims1} quantifies a
+bias of this criterion toward under-extrapolation and
+Section~\ref{sec:sims-val} discusses remedies; the selected pair is
+additionally reported in all output so that practitioners can inspect
+the choice.
+
+\subsubsection*{Computational efficiency}
+
+The CV procedure is parallelizable at two levels (across folds; across
+grid points), and the prefix property reduces the number of fitted
+pseudo-samples per fold from
+$|\mathcal K_\lambda|\cdot|\Lambda|\,B_{\mathrm{cv}}$ to
+$|\Lambda|\,B_{\mathrm{cv}}$ (Supplementary Material, Section~S2).
+
+\subsection{Bias-Corrected Extrapolation}\label{sec:ridge}
+
+Even with optimal $(\lambda_{\max},p_{\mathrm{deg}})$, the polynomial
+extrapolation to $\lambda=-1$ may suffer from approximation bias. We
+use a two-stage procedure. Stage~1 fits the primary degree-$d$
+polynomial $p(\lambda)=\bphi(\lambda)^\top\theta$ with
+$\bphi(\lambda)=(1,\lambda,\dots,\lambda^d)^\top$ to the
+$(\lambda_j,\bar\beta(\lambda_j))$ points. Stage~2 estimates a
+residual correction by ridge regression of the primary-fit residuals
+on a richer basis $\bphi_{d+2}(\lambda)$:
+\begin{equation}\label{eq:ridge}
+  \hat r_{\mathrm{ridge}}(\lambda)=\bphi_{d+2}(\lambda)^\top
+  \argmin_{\theta_r}\Bigl\|\bar\beta-\bm P\bar\beta
+  -\bPhi_r\theta_r\Bigr\|^2
+  +\gamma\|\theta_r\|^2,
+\end{equation}
+where $\bm P$ is the projection onto the span of the primary basis,
+$\bPhi_r$ the $(K\times(d+3))$ basis matrix, and $\gamma=0.01$; the
+final estimate is
+$\hat\beta_{\asimex}=p(-1)+\hat r_{\mathrm{ridge}}(-1)$. Because both
+stages are linear in the curve, the estimate is a single linear
+functional $\hat\beta_{\asimex}=\sum_jd_j\bar\beta(\lambda_j)$ with
+combined weights $d=c+c_{\mathrm{ridge}}$ satisfying
+$\sum_jd_j=1$, the form in which the variance estimator below and
+the asymptotic theory analyze it. The ridge stage is $O_p(B^{-1/2})$
+at the $\sqrt n$ scale (the theory treats it exactly through the
+combined weights).
+
+\subsection{Variance Estimation and Confidence Intervals}\label{sec:var}
+
+Let $c=(c_0,\dots,c_{K-1})$ denote the combined extrapolation weights
+(primary polynomial plus ridge second stage), so that the A-SIMEX
+estimator is exactly the linear functional
+$\hat\beta_{\asimex}=\sum_jc_j\bar\beta(\lambda_j)$ with
+$\sum_jc_j=1$, and let
+$\bm H_j=\E\bigl[e^{\beta(\lambda_j)^\top W(\lambda_j)}
+W(\lambda_j)W(\lambda_j)^\top\bigr]$ be the per-observation Hessian of
+the population SIMEX objective at grid point $\lambda_j$. Under the
+conditions of Theorem~\ref{thm:an},
+\begin{equation}\label{eq:sandwich}
+  \Var\bigl(\hat\beta_{\asimex}\bigr)\;\approx\;\frac1n\,\bm C
+  \bigl(\btV^{\mathrm{data}}+\tfrac1B\,\btV^{\mathrm{sim}}\bigr)
+  \bm C^\top,
+  \qquad
+  \bm C=\bigl[c_0\bm H_0^{-1},\dots,c_{K-1}\bm H_{K-1}^{-1}\bigr],
+\end{equation}
+where $\btV^{\mathrm{data}}$ is the covariance across observations of
+the stacked conditional influence functions
+$\E[\bm m_{ib}(\lambda_j)\mid Y_i,\bw_i]$ and
+$\btV^{\mathrm{sim}}$ their conditional covariance given the data;
+both admit closed-form expressions under the Gaussian error model
+(Gaussian tilt identities) and are estimated from the same replicates
+that produce the SIMEX curve, at negligible additional cost.
+Two features distinguish \eqref{eq:sandwich} from the additive
+``parameter-plus-extrapolation'' split that appears in earlier SIMEX
+treatments: (i)~the naive Fisher information
+$\bm I_W(\bet_0)^{-1}$ does \emph{not} enter additively: the
+estimator is a fixed weighted average of the grid-point
+pseudo-estimators, and its variance is the propagated influence
+covariance \eqref{eq:sandwich}, which reduces to the naive variance
+only in the limit of perfectly correlated grid-point influence; and
+(ii)~the simulation noise enters at exactly $O(B^{-1})$, so $B=100$
+makes it negligible relative to the data component, as confirmed
+empirically in Section~\ref{sec:sims-val}, where the analytic sandwich
+recovers $66$--$91\%$ of the parametric-bootstrap variance
+(first-order under-statement, improving with $n$). Confidence
+intervals are $\hat\beta_{\asimex,j}\pm
+z_{1-\alpha/2}\,\widehat{\mathrm{se}}_j$ from
+\eqref{eq:sandwich}; under overdispersion the same sandwich is valid
+with robust scores, and Section~\ref{sec:sims-nb} verifies this under
+negative-binomial outcomes.

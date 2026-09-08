@@ -1,0 +1,412 @@
+% ===========================================================================
+% REVISIONS TO THE MANUSCRIPT TEXT ("poisson_paper.tex")
+% G. Garg and R. Mishra
+%
+% This file contains drop-in replacements for every passage whose claims
+% were contradicted (or left unverifiable) by the corrected theory
+% (asimex_proofs.tex) and the completed simulations and application
+% (results/section5_simulations.tex, results/section6_application.tex).
+% Each block states exactly what it replaces. A change log is at the end.
+%
+% Editorial conventions: theorem names rather than numbers are used where
+% the reference crosses documents ("the consistency theorem", "the
+% growing-degree central limit theorem"); fix numbering at merge time.
+% ===========================================================================
+
+% ---------------------------------------------------------------------------
+% (1) REPLACES THE ABSTRACT (page 1 of the draft)
+% ---------------------------------------------------------------------------
+\begin{abstract}
+Poisson regression is widely used for count outcomes, but covariates are
+frequently observed with classical measurement error, and the resulting
+naive estimates are attenuated with invalid confidence intervals. We
+develop Adaptive SIMEX (A-SIMEX), which automates the two ad-hoc choices
+of SIMEX---the extrapolation region and the polynomial degree---by
+cross-validation with a one-standard-error parsimony rule, adds a
+ridge-corrected second extrapolation stage, and is accompanied by
+complete asymptotic theory: consistency under a growing-degree regime
+that we make explicit; asymptotic normality with an exact decomposition
+of the asymptotic variance into data and simulation components (the
+latter vanishing at rate $B^{-1}$ in the number of simulation
+replicates); and efficiency results relative to the oracle estimator,
+including an information-monotonicity lemma showing that no estimator
+based on noisy covariates can improve on the oracle to first order,
+while the second-order efficiency comparison is signed neither way. The
+theory corrects several claims of earlier SIMEX treatments and resolves
+the tension between consistency (which requires the polynomial degree to
+grow like $\log n$) and inference through an explicit window condition
+on the degree growth rate. In simulation studies with $1{,}000$ Monte
+Carlo repetitions per design cell---including misspecified (Laplace)
+error, negative-binomial outcomes, error variance estimated from
+replicated measures, and corrected-score and regression-calibration
+competitors---A-SIMEX removes most of the naive attenuation with valid
+inference when the error is moderate, and we identify an important
+limitation of automatic tuning: held-out prediction on the observed
+scale systematically under-extrapolates when the error is large,
+because its population minimizer is the naive pseudo-parameter. We
+characterize the resulting bias--variance trade-off, quantify the
+efficiency premium of extrapolation against the oracle, and give
+practical remedies. The methods are implemented in an open-source R
+package with an analytic sandwich variance estimator that we validate
+against the parametric bootstrap, and are applied to NHANES 2017--2018,
+where the measurement error is directly measurable: self-reported
+weight in a model for the count of prescription medications. All
+results are reproducible from a documented archive with fixed seeds.
+\end{abstract}
+
+% ---------------------------------------------------------------------------
+% (2) REPLACES SECTION 1.2 ("This Paper's Contributions") IN FULL
+% ---------------------------------------------------------------------------
+\subsection{This Paper's Contributions}\label{sec:contrib}
+
+We address these gaps by developing Adaptive SIMEX (A-SIMEX) and by
+subjecting it to a level of scrutiny that we argue should be standard
+for bias-correction methods. The contributions are:
+
+\begin{enumerate}\itemsep3pt
+\item \textbf{Automated hyperparameter selection, with its limits
+      quantified.} Extrapolation region and polynomial degree are
+      selected by $k$-fold cross-validation of the held-out Poisson
+      deviance, with a one-standard-error parsimony rule. This removes
+      subjectivity and is fully reproducible. Our simulations,
+      however, reveal a structural limitation that we do not paper
+      over: the population minimizer of the observed-scale CV criterion
+      is the naive pseudo-parameter $\beta(1)$, not $\beta_0$, so CV
+      systematically under-extrapolates when the measurement error is
+      large (Section~\ref{sec:sims1}). Automatic tuning is a solution
+      for small-to-moderate error and a documented failure mode for
+      large error, for which we propose deconvolution-aware remedies.
+\item \textbf{A bias-corrected two-stage extrapolation and an exact
+      variance estimator.} The primary polynomial fit is stabilized by
+      a ridge second stage, and inference uses an analytic sandwich
+      that decomposes the asymptotic variance exactly into a
+      \emph{data} component and a \emph{simulation} component of order
+      $B^{-1}$; this decomposition corrects the additive
+      ``parameter-plus-extrapolation'' split that appears in earlier
+      SIMEX treatments and in a draft of this paper, and it extends
+      robustly to overdispersed outcomes and to estimated error
+      variance (Sections~\ref{sec:sims-nb} and~\ref{sec:sims-sigma2}).
+\item \textbf{Complete and corrected asymptotic theory.} We prove
+      consistency and asymptotic normality of the A-SIMEX estimator,
+      a growing-degree central limit theorem that reconciles the
+      $\log n$ degree growth needed for consistency with centered
+      inference through an explicit window condition on the analyticity
+      margin, and oracle-efficiency results comprising an
+      information-monotonicity lemma (no estimator based on noisy
+      covariates beats the oracle to first order) and an explicit
+      second-order expansion whose sign is design-dependent. Along the
+      way we correct three claims that circulate informally for SIMEX:
+      the exactness of the extrapolation target, the form of the
+      variance decomposition, and the sign of the second-order
+      efficiency loss.
+\item \textbf{Evidence at replication standard.} All simulations
+      ($1{,}000$ Monte Carlo repetitions per cell) and the application
+      are generated by a single seed-fixed pipeline; the paper reports
+      what the pipeline produces, including results that are
+      unflattering to the method.
+\end{enumerate}
+
+% ---------------------------------------------------------------------------
+% (3) REPLACES SECTION 1.3 ("Roadmap") IN FULL
+% ---------------------------------------------------------------------------
+\subsection{Roadmap}\label{sec:roadmap}
+
+Section~\ref{sec:background} reviews the model and standard SIMEX.
+Section~\ref{sec:method} presents A-SIMEX: cross-validated selection of
+$(\lambda_{\max},\text{degree})$ (Section~3.1), the ridge second stage
+(Section~3.2), and the analytic sandwich variance estimator
+(Section~3.3). Section~\ref{sec:theory} states and proves the main
+results: the population SIMEX curve and its analyticity (Lemmas on the
+pseudo-true parameter), the consistency theorem, the asymptotic
+normality theorem with the exact data/simulation variance
+decomposition, the growing-degree central limit theorem, and the
+oracle-efficiency theorem with the information-monotonicity lemma.
+Section~\ref{sec:sims} reports the simulation studies
+($1{,}000$ repetitions per cell): the low-dimensional strong-signal
+scenario with $n$- and $\sigma^2_\epsilon$-grids, misspecified Laplace
+error, computation times up to $p=50$, negative-binomial outcomes, and
+estimated error variance from replicated measures. Section~\ref{sec:app}
+applies the methods to NHANES 2017--2018, where self-reported weight is
+the error-prone covariate and the error variance is measurable within
+the same survey, with a sensitivity analysis over
+$\sigma^2_\epsilon$. Section~\ref{sec:software} describes the R
+package. Section~\ref{sec:discussion} discusses limitations and
+extensions. Complete proofs are collected in a companion appendix
+(reproduced in the replication archive as
+\texttt{asimex\_proofs.pdf}), which supersedes the proof sketches of
+the earlier draft.
+
+% ---------------------------------------------------------------------------
+% (4) REPLACES SECTION 3.3 ("Variance Estimation and Confidence
+%     Intervals") IN FULL.  The draft's eqs. (14)-(19) and the
+%     decomposition Var_param + Var_extrap + Var_sim are superseded.
+% ---------------------------------------------------------------------------
+\subsection{Variance Estimation and Confidence Intervals}\label{sec:var}
+
+Let $c=(c_0,\dots,c_{K-1})$ denote the combined extrapolation weights
+(primary polynomial plus ridge second stage), so that the A-SIMEX
+estimator is exactly the linear functional
+$\hat\beta_{\asimex}=\sum_jc_j\bar\beta(\lambda_j)$ with
+$\sum_jc_j=1$, and let
+$\bm H_j=\E\bigl[e^{\beta(\lambda_j)^\top W(\lambda_j)}
+W(\lambda_j)W(\lambda_j)^\top\bigr]$ be the per-observation Hessian of
+the population SIMEX objective at grid point $\lambda_j$. Under the
+conditions of the asymptotic normality theorem,
+\begin{equation}\label{eq:sandwich}
+  \Var\bigl(\hat\beta_{\asimex}\bigr)\;\approx\;\frac1n\,\bm C
+  \bigl(\btV^{\mathrm{data}}+\tfrac1B\,\btV^{\mathrm{sim}}\bigr)
+  \bm C^\top,
+  \qquad
+  \bm C=\bigl[c_0\bm H_0^{-1},\dots,c_{K-1}\bm H_{K-1}^{-1}\bigr],
+\end{equation}
+where $\btV^{\mathrm{data}}$ is the covariance across observations of
+the stacked conditional influence functions
+$\E[\bm m_{ib}(\lambda_j)\mid Y_i,\bm W_i]$ and
+$\btV^{\mathrm{sim}}$ their conditional covariance given the data.
+Both matrices admit closed-form expressions under the Gaussian error
+model (Gaussian tilt identities) and are estimated from the same
+replicates that produce the SIMEX curve, at negligible additional
+cost; a pairs-bootstrap option is provided for small samples. Two
+features distinguish \eqref{eq:sandwich} from the earlier draft's
+decomposition $\Var_{\mathrm{param}}+\Var_{\mathrm{extrap}}
++\Var_{\mathrm{sim}}$ with $\Var_{\mathrm{param}}
+=\bm I_W(\bet_0)^{-1}$: (i)~the naive Fisher information
+$\bm I_W(\bet_0)^{-1}$ does \emph{not} enter additively --- the
+estimator is a fixed weighted average of the grid-point
+pseudo-estimators, and its variance is the propagated influence
+covariance \eqref{eq:sandwich}, which reduces to the naive variance
+only in the limit of perfectly correlated grid-point influence; and
+(ii)~the simulation noise enters at exactly $O(B^{-1})$, so $B=100$
+makes it negligible relative to the data component --- confirmed
+empirically in Section~\ref{sec:sims-val}, where the analytic sandwich
+recovers $66$--$91\%$ of the parametric-bootstrap variance
+(first-order under-statement, improving with $n$). Confidence
+intervals are $\hat\beta_{\asimex,j}\pm
+z_{1-\alpha/2}\,\widehat{\mathrm{se}}_j$ with
+$\widehat{\mathrm{se}}$ from \eqref{eq:sandwich}; under
+overdispersion the same sandwich is valid with robust scores, and
+Section~\ref{sec:sims-nb} verifies this under negative-binomial
+outcomes.
+
+% ---------------------------------------------------------------------------
+% (5) REPLACES SECTION 7.4 ("Computational Complexity") AND 7.5
+%     ("Parallelization Strategy") IN FULL. The draft's eq. (35)-(36)
+%     ("30-60 minutes") over-estimated by orders of magnitude because it
+%     did not exploit batching or the prefix property of the CV grid.
+% ---------------------------------------------------------------------------
+\subsection{Computational Complexity}\label{sec:complexity}
+
+Three implementation ideas reduce the cost far below naive estimates.
+First, all $B$ SIMEX replicates at a grid point are fitted by one
+\emph{batched} IRLS sweep: the score and Hessian accumulations are
+tensor contractions over a $(B,n,p)$ array, so the $B$ fits share the
+linear-algebra machinery. Second, the CV procedure exploits the
+\emph{prefix property} of the SIMEX grid: one union-grid curve per
+fold (with noise shared across $\lambda$ within a replicate, per the
+manuscript's Algorithm~1) serves all candidate $\lambda_{\max}$,
+reducing the number of fitted pseudo-samples per fold from
+$|\mathcal K_\lambda|\cdot|\Lambda|\,B_{\mathrm{cv}}$ to
+$|\Lambda|\,B_{\mathrm{cv}}$. Third, fits along the curve are warm
+started from the previous grid point. Measured single-core times for
+the full A-SIMEX fit (CV plus final curve plus sandwich) are $0.10$,
+$0.28$, $0.95$, and $3.3$\,seconds at
+$(n{=}200,p)\in\{5,15,30,50\}$ with $B=100$, $B_{\mathrm{cv}}=25$;
+standard SIMEX is about twice as fast, and the corrected-score
+estimator is one to two orders of magnitude cheaper but numerically
+fragile (Section~\ref{sec:sims3}). The asymptotic complexity per
+replication remains $O(B\,|\Lambda|\,n p^2)$ for the final curve plus
+$O(5\,|\Lambda|\,B_{\mathrm{cv}}\,n p^2)$ for the CV, but the
+constants are small enough that parallelization over Monte Carlo
+repetitions, CV folds, or grid points---all embarrassingly
+parallel, and all supported by the package through the
+\texttt{future}/\texttt{furrr} backends---is a matter of convenience
+rather than necessity on modern hardware.
+
+% ---------------------------------------------------------------------------
+% (6) REPLACES SECTION 8 ("Discussion") IN FULL
+% ---------------------------------------------------------------------------
+\section{Discussion}\label{sec:discussion}
+
+\subsection{Summary of Contributions}
+
+This paper makes SIMEX for Poisson regression automatic, gives it
+complete and corrected asymptotic theory, and reports its
+finite-sample behavior at replication standard. Three findings that we
+believe are of independent interest emerged from holding the method to
+this standard: (i)~held-out prediction on the observed scale cannot
+select the extrapolation that bias correction requires, because its
+population minimizer is the naive pseudo-parameter; (ii)~the variance
+of the extrapolated functional is governed by the norm of the
+extrapolation weights ($\sum_j|c_j|\approx7.8$ for the standard
+quadratic extrapolant), which quantifies a substantial and previously
+unappreciated efficiency premium; and (iii)~the analytic
+data-plus-simulation sandwich makes inference nearly free, and its
+$66$--$91\%$ recovery of the bootstrap variance delineates what part
+of the finite-sample noncoverage is variance miscalibration and what
+part is residual extrapolation bias.
+
+\subsection{Comparison with Alternatives}
+
+\emph{Versus standard SIMEX.} A-SIMEX removes the ad-hoc choices and
+adds the variance machinery; in the simulations the two track each
+other closely, with A-SIMEX (1-SE rule) marginally better at small
+error and marginally worse at large error, where the parsimony rule
+reinforces the CV's under-extrapolation. The honest summary is that
+the tuning layer is not where the accuracy is won or lost; the
+extrapolation bias is.
+
+\emph{Versus the corrected score (Nakamura, 1990).} The corrected
+score is consistent for the Gaussian-error pseudo-score without
+requiring a model for $\Pr(X\mid W)$ --- it requires only the error
+distribution, as SIMEX does --- and is dramatically cheaper
+($<0.05$\,s at $p=50$). Its weaknesses, quantified in
+Section~\ref{sec:sims}, are numerical: Newton divergence in about
+$1\%$ of fits under misspecification, RMSE exploding with $p$ when
+many coefficients are weakly identified ($0.13$ at $p=5$ to $2.72$ at
+$p=50$), and instability at small $n$ with large error. SIMEX-type
+methods are more stable in exactly these regimes, at a
+computational premium. The two are complements: the corrected score
+when $p$ is large and the error small, SIMEX when stability matters.
+
+\emph{Versus deconvolution and functional methods.} These remain
+computationally intensive and ill-posed; A-SIMEX scales to $p=50$
+in seconds. A fair comparison at the level of
+\citet{delaigle2008} would be valuable but is beyond our scope.
+
+\subsection{Limitations and Caveats}
+
+\begin{enumerate}\itemsep3pt
+\item \textbf{Error variance known or estimated.} The theory
+      conditions on $\bSig_\epsilon$. The replicate-based estimator
+      performs indistinguishably in Section~\ref{sec:sims-sigma2};
+      the estimated-variance asymptotics ( uncertainty propagation
+      through the extrapolation) are not developed here.
+\item \textbf{Classical error.} The NHANES application makes the
+      assumption auditable: the corrected estimates lie
+      $1.5$ standard errors \emph{above} the measured-weight anchor,
+      the signature of nonclassical (truth-correlated) self-report
+      error, which no classical-error method removes. Users with
+      validation data should always fit the anchor when it exists.
+\item \textbf{Residual extrapolation bias at large error.} At
+      $\sigma^2_\epsilon/\Var(X)\gtrsim0.5$, polynomial SIMEX of any
+      flavor retains bias of the same order as the naive attenuation
+      it removes; coverage of nominal $95\%$ intervals degrades
+      accordingly. Remedies (deconvolution-aware selection;
+      variance-penalized degree selection) are stated in
+      Section~\ref{sec:sims-val} but not developed.
+\item \textbf{First-order variance estimator.} The sandwich
+      under-states the finite-sample variance by $10$--$34\%$ at
+      $n\le100$; bootstrap standard errors are the recommended
+      small-sample alternative.
+\item \textbf{High dimensions.} Repeated GLM fitting remains
+      $O(np^2)$ per pseudo-sample; regularized SIMEX would be needed
+      for $p$ in the hundreds.
+\end{enumerate}
+
+\subsection{Extensions and Future Work}
+
+Beyond the Berkson error, imputation with validation data,
+alternative GLMs, time-series/spatial dependence, and regularized
+extensions sketched in the earlier draft (all still open), the present
+results add two concrete problems: (i)~\emph{deconvolution-aware model
+selection} --- constructing a held-out criterion whose population
+minimizer is $\beta(-1)=\bet_0$ rather than $\beta(1)$, e.g.\ by
+evaluating the held-out deviance at pseudo-deconvolved covariates
+simulated under each candidate hyperparameter --- for which our
+CV-bias finding provides both the motivation and the diagnostic; and
+(ii)~\emph{variance-aware degree selection} --- enlarging the degree
+grid while penalizing the extrapolation variance
+$\dot{\bm C}_\beta$ of the efficiency theorem, in the spirit of
+model-selection penalties, which would automate the bias--variance
+trade-off that practitioners currently negotiate by hand.
+
+% ---------------------------------------------------------------------------
+% (7) REPLACES SECTION 9 ("Conclusion") IN FULL
+% ---------------------------------------------------------------------------
+\section{Conclusion}\label{sec:conclusion}
+
+Measurement error in covariates is pervasive, and the naive Poisson
+fit is not merely inefficient but misleading: its attenuation grows
+linearly in the error variance and its intervals collapse, as our
+simulations document cell by cell. SIMEX remains the most practical
+correction framework for this problem, and this paper makes it
+automatic, gives it correct and complete asymptotics, equips it with a
+closed-form variance estimator, and reports---at replication
+standard, with all seeds fixed---exactly where it succeeds (small to
+moderate error, with valid inference and RMSE ties with the best
+competitor), what it costs (a quantified efficiency premium relative
+to the oracle), and where it fails (large error, where residual
+extrapolation bias dominates and observed-scale cross-validation
+under-extrapolates by construction). The NHANES application shows the
+workflow we recommend in practice: estimate the error variance from
+measurable discrepancies, correct, validate against any available
+anchor, and report the sensitivity profile over the error variance.
+The open-source implementation and the fully reproducible archive are
+offered so that both the method and the standard of evidence can be
+checked and extended.
+
+% ===========================================================================
+% (8) CHANGE LOG: superseded claims of the June 2026 draft
+% ===========================================================================
+% ---------------------------------------------------------------------------
+% \section*{Change Log (editorial; remove before submission)}
+%
+% 1. Abstract / Sec 1.2(3) / Sec 8.1(3): "variance decomposes into
+%    parameter estimation, extrapolation, and simulation components"
+%    -> REPLACED by the exact data + O(1/B) simulation decomposition
+%    (eq. sandwich); the naive Fisher information does not enter
+%    additively. Evidence: corrected-proofs Theorem 2 and Remark;
+%    Section 5.7 (66-91% bootstrap recovery).
+%
+% 2. Abstract / Sec 5.4 "expected results": "A-SIMEX bias
+%    substantially smaller than standard SIMEX, approaches oracle"
+%    -> NOT SUPPORTED. Real M=1000 results: at sigma^2=1.0, std SIMEX
+%    bias -0.149 vs A-SIMEX(1-SE) -0.191 (n=1000); the CV criterion's
+%    population minimizer is beta(1), not beta_0. Now reported as a
+%    finding with remedies (Sec 5.1, 5.7). Evidence: Table 1, Fig 1,
+%    CV-pick distribution (argmin picks (0.5,2) in 1000/1000 reps).
+%
+% 3. Sec 1.2(3) / Sec 8.1(3): "relative efficiency bounds ... ARE in
+%    [0.7,0.95]" -> REPLACED. Real RMSE ratio to oracle ~2.6 at
+%    (n=1000, sigma^2=0.1); the second-order efficiency comparison is
+%    design-dependent in sign (corrected-proofs Theorem 3 and the
+%    linear-model counterexample). Evidence: Table 1.
+%
+% 4. Sec 8.2 "Corrected score ... require specification of Pr(X|W)":
+%    INCORRECT. The corrected score requires the error distribution
+%    only, as SIMEX does. Comparison rewritten around its actual
+%    weaknesses (numerical fragility; RMSE growth in p). Evidence:
+%    Tables 2-3.
+%
+% 5. Sec 2.6 / Sec 8.2: "remains valid under mild misspecification"
+%    -> now QUANTIFIED (Laplace DGP, Table 2, Fig 2); corrected-score
+%    divergence 1.0% documented.
+%
+% 6. Sec 6 (crime data): "template; dataset to be chosen" -> REPLACED
+%    by the NHANES 2017-18 application with measurable error, an
+%    available gold-standard anchor, and a sigma^2 sensitivity
+%    analysis (results/section6_application.tex).
+%
+% 7. Sec 7.4-7.5: "30-60 minutes per fit" -> REPLACED by measured
+%    0.10-3.3 s (batched IRLS + prefix CV + warm starts); the draft's
+%    complexity constant ignored batching. Evidence: Table 3.
+%
+% 8. Sec 4 (theory): proof sketches superseded in full by the
+%    corrected-proofs document: the identity W(-1)=W-eps=X was wrong
+%    (simulated vs observed noise); ineq. (43) (polynomial
+%    approximation) was false; the B/n->0 and B/sqrt(n)->infty
+%    conditions were unmotivated (B->infty suffices); Theorem 6/7/8
+%    renumbered and restructured with an added growing-degree CLT and
+%    an information-monotonicity lemma replacing the false
+%    positive-semidefiniteness claim. Evidence: asimex_proofs.pdf,
+%    its Section 8 change list.
+%
+% 9. Sec 3.3: Var_param + Var_extrap + Var_sim decomposition replaced
+%    by eq. (sandwich); parametric bootstrap retained as a small-
+%    sample option. Evidence: corrected-proofs Corollary 1;
+%    validate_sandwich.py.
+%
+% 10. Sec 5.3 "p up to 50" timing claims and Sec 7.5 parallelization
+%     strategy: revised to measured numbers; prefix property added to
+%     the algorithm description (shared noise across lambda).
+% ---------------------------------------------------------------------------

@@ -1,0 +1,22 @@
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Scenario 3 (scalability): mean computation time per fit
+in seconds ($n=200$, $M=100$ repetitions, single core) and RMSE
+of $\hat{\bm\beta}$ averaged over coefficients.}
+\label{tab:scenario3}
+\begin{tabular}{c cc cc cc}
+\toprule
+& \multicolumn{2}{c}{Standard SIMEX} & \multicolumn{2}{c}{Adaptive SIMEX} & \multicolumn{2}{c}{Corrected score} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+$p$ & Time (s) & RMSE & Time (s) & RMSE & Time (s) & RMSE \\
+\midrule
+5 & 0.05 & 0.094 & 0.10 & 0.091 & 0.00 & 0.125 \\
+15 & 0.15 & 0.105 & 0.28 & 0.100 & 0.00 & 0.223 \\
+30 & 0.47 & 0.116 & 0.95 & 0.110 & 0.02 & 2.272 \\
+50 & 1.53 & 0.126 & 3.31 & 0.121 & 0.04 & 2.715 \\
+\bottomrule
+\end{tabular}
+\par\footnotesize \emph{Note:} naive, regression
+calibration and oracle fits take under 0.01\,s for all $p$.
+\end{table}

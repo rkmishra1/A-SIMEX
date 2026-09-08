@@ -1,0 +1,26 @@
+\begin{table}[t]
+\centering
+\small
+\caption{NHANES 2017--2018 application: Poisson regression of the
+number of prescription medications on body weight (coefficient per
+10\,kg, robust standard errors). The error-prone covariate is
+self-reported weight; the classical error variance is estimated
+from the self-report minus measured differences
+($\hat\sigma^2_\epsilon = 24.1\,\mathrm{kg}^2$,
+mean difference $-0.7\,\mathrm{kg}$). The
+measured-weight fit is shown as the gold-standard anchor.}
+\label{tab:nhanes}
+\begin{tabular}{lccc}
+\toprule
+Method & $\hat\beta$ (10\,kg) & SE & Selected $(\lambda_{\max},$ degree$)$ \\
+\midrule
+Naive (self-reported weight) & +1.189 & (0.076) & -- \\
+Regression calibration & +1.250 & (0.080) & -- \\
+Corrected score (Nakamura) & +1.253 & (0.081) & -- \\
+Standard SIMEX & +1.253 & (0.081) & -- \\
+Adaptive SIMEX (1-SE rule) & +1.247 & (0.081) & ((, n) \\
+Adaptive SIMEX (argmin) & +1.214 & (0.078) & ((, n) \\
+Measured weight (anchor) & +1.095 & (0.072) & -- \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,328 @@
+% ---------------------------------------------------------------------------
+% SECTION 7: SOFTWARE
+% ---------------------------------------------------------------------------
+% ---------------------------------------------------------------------------
+% SECTION 7: SOFTWARE (one page; details in Appendix B)
+% ---------------------------------------------------------------------------
+\section{Software Implementation}\label{sec:software}
+
+The methods are implemented in the open-source R package
+\texttt{adaptsimex}, whose main entry point is
+
+\begin{center}
+\small
+\begin{minipage}{0.9\textwidth}
+\texttt{adaptive\_simex(formula, data, me\_vars, sigma\_error,\\
+\quad se\_method = c("sandwich", "bootstrap"), seed = NULL)}
+\end{minipage}
+\end{center}
+
+\noindent where \texttt{me\_vars} names the error-contaminated
+columns and \texttt{sigma\_error} their standard deviations. The
+function cross-validates $(\lambda_{\max},\text{degree})$ with the
+one-standard-error rule, fits the two-stage extrapolated estimator,
+and returns coefficients with sandwich or bootstrap standard errors,
+the CV score table, and the fitted SIMEX curve for the diagnostic
+plots. The analytic sandwich of Section~\ref{sec:var} is the default;
+the pairs-bootstrap is recommended at small samples
+(Section~\ref{sec:sims-val}). The package ships with unit tests, a
+vignette reproducing the attenuation-correction comparison on
+simulated data, and S3 methods (\texttt{summary}, \texttt{confint},
+\texttt{plot}). Every number in Sections~\ref{sec:sims}
+and~\ref{sec:app} was produced by the same code path (a documented
+Python harness that ships with the replication archive and matches
+the R implementation to numerical precision), so the archive
+regenerates the paper exactly. Package structure, the full call
+interface, and the computational tricks that bring a full A-SIMEX fit
+down to seconds are documented in the Supplementary Material (Section~S2);
+timing evidence appears in the Supplementary Material (Section~S2).
+
+% ---------------------------------------------------------------------------
+\section{Discussion}\label{sec:discussion}
+
+\subsection{Summary of Contributions}
+
+This paper makes SIMEX for Poisson regression automatic, gives it
+complete and corrected asymptotic theory, and reports its
+finite-sample behavior at replication standard. Three findings that we
+believe are of independent interest emerged from holding the method to
+this standard: (i)~held-out prediction on the observed scale cannot
+select the extrapolation that bias correction requires, because its
+population minimizer is the naive pseudo-parameter; (ii)~the variance
+of the extrapolated functional is governed by the norm of the
+extrapolation weights ($\sum_j|c_j|\approx7.8$ for the standard
+quadratic extrapolant), which quantifies a substantial and previously
+unappreciated efficiency premium; and (iii)~the analytic
+data-plus-simulation sandwich makes inference nearly free, and its
+$66$--$91\%$ recovery of the bootstrap variance delineates what part
+of the finite-sample noncoverage is variance miscalibration and what
+part is residual extrapolation bias.
+
+\subsection{Comparison with Alternatives}
+
+\emph{Versus standard SIMEX.} A-SIMEX removes the ad-hoc choices and
+adds the variance machinery; in the simulations the two track each
+other closely, with A-SIMEX (1-SE rule) marginally better at small
+error and marginally worse at large error, where the parsimony rule
+reinforces the CV's under-extrapolation. The honest summary is that
+the tuning layer is not where the accuracy is won or lost; the
+extrapolation bias is.
+
+\emph{Versus the corrected score \citep{nakamura1990}.} The corrected
+score is consistent for the Gaussian-error pseudo-score without
+requiring a model for $\Pr(X\mid W)$: it requires only the error
+distribution, as SIMEX does, and it is dramatically cheaper
+($<0.05$\,s at $p=50$). Its weaknesses, quantified in
+Section~\ref{sec:sims}, are numerical: Newton divergence in about
+$1\%$ of fits under misspecification, RMSE exploding with $p$ when
+many coefficients are weakly identified ($0.13$ at $p=5$ to $2.72$ at
+$p=50$), and instability at small $n$ with large error. SIMEX-type
+methods are more stable in exactly these regimes, at a computational
+premium. The two are complements: the corrected score when $p$ is
+large and the error small, SIMEX when stability matters.
+
+\emph{Versus deconvolution and functional methods
+\citep{fan1993,delaigle2008}.} These remain computationally intensive
+and ill-posed; A-SIMEX scales to $p=50$ in seconds. A fair comparison
+at their level of generality would be valuable but is beyond our
+scope.
+
+\subsection{Limitations and Caveats}\label{sec:caveats}
+
+\begin{enumerate}\itemsep3pt
+\item \textbf{Error variance known or estimated.} The theory
+      conditions on $\bSig_\epsilon$. The replicate-based estimator
+      performs indistinguishably in Section~\ref{sec:sims-sigma2};
+      the estimated-variance asymptotics (uncertainty propagation
+      through the extrapolation) are not developed here.
+\item \textbf{Classical error.} The NHANES application makes the
+      assumption auditable: the corrected estimates lie $1.5$ standard
+      errors \emph{above} the measured-weight anchor, the signature of
+      nonclassical (truth-correlated) self-report error, which no
+      classical-error method removes. Users with validation data
+      should always fit the anchor when it exists.
+\item \textbf{Residual extrapolation bias at large error.} At
+      $\sigma^2_\epsilon/\Var(X)\gtrsim0.5$, polynomial SIMEX of any
+      flavor retains bias of the same order as the naive attenuation
+      it removes; coverage of nominal $95\%$ intervals degrades
+      accordingly. Remedies (deconvolution-aware selection;
+      variance-penalized degree selection) are stated in
+      Section~\ref{sec:sims-val} but not developed.
+\item \textbf{First-order variance estimator.} The sandwich
+      under-states the finite-sample variance by $10$--$34\%$ at
+      $n\le100$; bootstrap standard errors are the recommended
+      small-sample alternative.
+\item \textbf{High dimensions.} Repeated GLM fitting remains
+      $O(np^2)$ per pseudo-sample; regularized SIMEX would be needed
+      for $p$ in the hundreds.
+\end{enumerate}
+
+\subsection{Extensions and Future Work}\label{sec:extensions}
+
+Beyond Berkson error, imputation with validation data, alternative
+GLMs, time-series and spatial dependence, and regularized extensions
+(all still open), the present results add two concrete problems:
+(i)~\emph{deconvolution-aware model selection}: constructing a
+held-out criterion whose population minimizer is
+$\beta(-1)=\bet_0$ rather than $\beta(1)$, for example by evaluating
+the held-out deviance at pseudo-deconvolved covariates simulated under
+each candidate hyperparameter; our CV-bias finding provides both the
+motivation and the diagnostic; and (ii)~\emph{variance-aware degree
+selection}: enlarging the degree grid while penalizing the
+extrapolation variance $\dot{\bm C}_\beta$ of Theorem~\ref{thm:are},
+in the spirit of model-selection penalties, which would automate the
+bias--variance trade-off that practitioners currently negotiate by
+hand.
+
+% ---------------------------------------------------------------------------
+% SECTION 9: CONCLUSION (revised)
+% ---------------------------------------------------------------------------
+\section{Conclusion}\label{sec:conclusion}
+
+Measurement error in covariates is pervasive, and the naive Poisson
+fit is inefficient and misleading: its attenuation grows
+linearly in the error variance and its intervals collapse, as our
+simulations document cell by cell. SIMEX remains the most practical
+correction framework for this problem, and this paper makes it
+automatic, gives it correct and complete asymptotics, equips it with a
+closed-form variance estimator, and reports, at replication
+standard with all seeds fixed, exactly where it succeeds (small to
+moderate error, with valid inference and RMSE ties with the best
+competitor), what it costs (a quantified efficiency premium relative
+to the oracle), and where it fails (large error, where residual
+extrapolation bias dominates and observed-scale cross-validation
+under-extrapolates by construction). The NHANES application shows the
+workflow we recommend in practice: estimate the error variance from
+measurable discrepancies, correct, validate against any available
+anchor, and report the sensitivity profile over the error variance.
+The open-source implementation and the fully reproducible archive are
+offered so that both the method and the standard of evidence can be
+checked and extended.
+
+% ---------------------------------------------------------------------------
+% REFERENCES (APA)
+% ---------------------------------------------------------------------------
+\section*{Data and code availability}\label{sec:data}
+
+The NHANES public-use files used in Sections~\ref{sec:app}
+and~\ref{sec:transfer} (2017--2018: DEMO\_J, BMX\_J, WHQ\_J,
+RXQ\_RX\_J; 2015--2016: the corresponding H files) are distributed by
+the National Center for Health Statistics and are downloaded by the
+replication archive. The archive contains the R
+package, the simulation and application code, all raw Monte Carlo
+output, and a master seed (20260905) from which every table and figure
+in the paper regenerates exactly; see the README.
+
+\begin{thebibliography}{25}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[Apanasovich et al.(2009)]{apanasovich2009}
+Apanasovich, T.~V., Carroll, R.~J., \& Maity, A. (2009). SIMEX and
+standard error estimation in semiparametric measurement error models.
+\emph{Electronic Journal of Statistics}, \emph{3}, 558--585. % page range to verify
+
+\bibitem[Berkson(1950)]{berkson1950}
+Berkson, J. (1950). Are there two regressions? \emph{Journal of the
+American Statistical Association}, \emph{45}(250), 164--180.
+
+\bibitem[Berry et al.(2002)]{berry2002}
+Berry, S.~M., Carroll, R.~J., \& Ruppert, D. (2002). Bayesian smoothing
+and regression splines for measurement error problems. \emph{Journal
+of the American Statistical Association}, \emph{97}(457), 160--169.
+
+\bibitem[Bound et al.(2001)]{bound2001}
+Bound, J., Brown, C., \& Mathiowetz, N. (2001). Measurement error in
+survey data. In J.~J. Heckman \& E.~Leamer (Eds.), \emph{Handbook of
+Econometrics} (Vol.~5, pp.~3705--3843). Elsevier.
+
+\bibitem[Cameron and Trivedi(2013)]{cameron2013}
+Cameron, A.~C., \& Trivedi, P.~K. (2013). \emph{Regression analysis of
+count data} (2nd~ed.). Cambridge University Press.
+
+\bibitem[Carroll et al.(2006)]{carroll2006}
+Carroll, R.~J., Ruppert, D., Stefanski, L.~A., \& Crainiceanu, C.~M.
+(2006). \emph{Measurement error in nonlinear models: A modern
+perspective} (2nd~ed.). Chapman \& Hall/CRC.
+
+\bibitem[Chen et al.(2011)]{chen2011}
+Chen, X., Hong, H., \& Nekipelov, D. (2011). Nonlinear models with
+measurement error: A brief survey. \emph{Journal of Economic
+Literature}, \emph{49}(4), 906--937.
+
+\bibitem[Cook and Stefanski(1994)]{cook1994}
+Cook, J.~R., \& Stefanski, L.~A. (1994). Simulation-extrapolation
+estimation in parametric measurement error models. \emph{Journal of
+the American Statistical Association}, \emph{89}(428), 1314--1328.
+
+\bibitem[Delaigle and Meister(2008)]{delaigle2008}
+Delaigle, A., \& Meister, A. (2008). Density estimation from
+heteroscedastic data. \emph{Journal of the American Statistical
+Association}, \emph{103}(482), 726--736.
+
+\bibitem[Fan(1991)]{fan1991}
+Fan, J. (1991). On the optimal rates of convergence for nonparametric
+deconvolution problems. \emph{The Annals of Statistics}, \emph{19}(3),
+1257--1272.
+
+\bibitem[Fan and Truong(1993)]{fan1993}
+Fan, J., \& Truong, Y.~K. (1993). Nonparametric regression with errors
+in variables. \emph{The Annals of Statistics}, \emph{21}(3),
+1900--1925.
+
+\bibitem[Fuller(1987)]{fuller1987}
+Fuller, W.~A. (1987). \emph{Measurement error models}. John Wiley \&
+Sons.
+
+\bibitem[Griliches(1986)]{griliches1986}
+Griliches, Z. (1986). Economic data issues. In Z.~Griliches \&
+M.~D. Intriligator (Eds.), \emph{Handbook of Econometrics} (Vol.~3,
+pp.~1465--1514). North-Holland. % page range to verify
+
+\bibitem[Hausman(2001)]{hausman2001}
+Hausman, J.~A. (2001). Mismeasured variables in econometric analysis:
+Problems and solutions. \emph{Journal of Econometrics}, \emph{101},
+1--39. % page range to verify
+
+\bibitem[Hu(2008)]{hu2008}
+Hu, Y. (2008). Identification and estimation of nonlinear models with
+misclassification error using instrumental variables: A general
+solution. \emph{Econometrica}, \emph{76}(1), 1--33. % page range to verify
+
+\bibitem[K\"uchenhoff et al.(2006)]{kuechenhoff2006}
+K\"uchenhoff, H., Mwalili, S.~M., \& Lesaffre, E. (2006). A general
+method for dealing with misclassification in regression: The
+misclassification SIMEX. \emph{Biometrics}, \emph{62}(1), 85--94.
+
+\bibitem[Lewbel(1997)]{lewbel1997}
+Lewbel, A. (1997). Constructing instruments for regressions with
+measurement error when no additional data are available, with an
+application to patents and R\&D. \emph{Econometrica}, \emph{65}(5),
+1201--1213.
+
+\bibitem[Mahajan(2006)]{mahajan2006}
+Mahajan, A. (2006). Identification and estimation of regression models
+with misclassification. \emph{Econometrica}, \emph{74}(3), 645--678.
+
+\bibitem[Mullahy(1986)]{mullahy1986}
+Mullahy, J. (1986). Specification and testing of some modified count
+data models. \emph{Journal of Econometrics}, \emph{33}(3), 341--365.
+
+\bibitem[Nakamura(1990)]{nakamura1990}
+Nakamura, T. (1990). Corrected score function for errors-in-variables
+models: Methodology and application to generalized linear models.
+\emph{Biometrika}, \emph{77}(1), 127--137.
+
+\bibitem[National Center for Health Statistics(2020)]{nhanes-rxq}
+National Center for Health Statistics. (2020). \emph{NHANES 2017--2018:
+Prescription medications file documentation} (RXQ\_RX\_J). Centers for
+Disease Control and Prevention, Hyattsville, MD.
+
+\bibitem[Prentice(1982)]{prentice1982}
+Prentice, R.~L. (1982). Covariate measurement errors and parameter
+estimation in a failure time regression model. \emph{Biometrics},
+\emph{38}(3), 601--612.
+
+\bibitem[Qin(2000)]{qin2000}
+Qin, J. (2000). Combining parametric and empirical likelihoods.
+\emph{Biometrika}, \emph{87}(3), 484--490.
+
+\bibitem[Richardson and Gilks(1993)]{richardson1993}
+Richardson, S., \& Gilks, W.~R. (1993). Conditional independence models
+for epidemiological studies with covariate measurement error.
+\emph{Biometrics}, \emph{49}(3), 901--911. % page range to verify
+
+\bibitem[Rivlin(1969)]{rivlin1969}
+Rivlin, T.~J. (1969). \emph{An introduction to the approximation of
+functions}. Blaisdell Publishing Company.
+
+\bibitem[Rosner et al.(1989)]{rosner1989}
+Rosner, B., Willett, W.~C., \& Spiegelman, D. (1989). Correction of
+logistic regression relative risk estimates and confidence intervals
+for systematic underreporting of intake. \emph{Statistics in Medicine},
+\emph{8}(9), 1051--1069.
+
+\bibitem[Schennach(2004)]{schennach2004}
+Schennach, S.~M. (2004). Estimation of continuous models with errors in
+variables. \emph{Econometrica}, \emph{72}(1), 337--341. % page range to verify
+
+\bibitem[Stefanski and Cook(1995)]{stefanski1995}
+Stefanski, L.~A., \& Cook, J.~R. (1995). Simulation-extrapolation: The
+measurement error jackknife. \emph{Journal of the American Statistical
+Association}, \emph{90}(432), 1247--1256.
+
+\bibitem[Trefethen(2013)]{trefethen2013}
+Trefethen, L.~N. (2013). \emph{Approximation theory and approximation
+practice}. Society for Industrial and Applied Mathematics.
+
+\bibitem[van der Vaart(1998)]{vdv1998}
+van der Vaart, A.~W. (1998). \emph{Asymptotic statistics}. Cambridge
+University Press.
+
+\bibitem[van der Vaart and Wellner(1996)]{vdv1996}
+van der Vaart, A.~W., \& Wellner, J.~A. (1996). \emph{Weak convergence
+and empirical processes: With applications to statistics}. Springer.
+
+\bibitem[Winkelmann(2008)]{winkelmann2008}
+Winkelmann, R. (2008). \emph{Econometric analysis of count data}
+(5th~ed.). Springer.
+\end{thebibliography}

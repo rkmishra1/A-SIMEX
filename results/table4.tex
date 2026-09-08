@@ -1,0 +1,27 @@
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Overdispersed outcomes (negative binomial with
+$\mathrm{Var}(Y\mid X)=\mu+\mu^2/2$): all methods fitted as
+Poisson with robust standard errors ($n=500$, $p=3$,
+$\sigma^2_\epsilon=0.5$, $M=1{,}000$).}
+\label{tab:nb}
+\begin{tabular}{l rrr rrr}
+\toprule
+& \multicolumn{3}{c}{Bias} & \multicolumn{3}{c}{Coverage} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Method & $\beta_1$ & $\beta_2$ & $\beta_3$ & $\beta_1$ & $\beta_2$ & $\beta_3$ \\
+\midrule
+Naive & -0.244 & 0.126 & -0.202 & 0.20 & 0.59 & 0.30 \\
+Regression calibration & 0.136 & -0.062 & 0.100 & 0.80 & 0.83 & 0.80 \\
+Corrected score & 0.042 & -0.032 & 0.045 & 0.91 & 0.89 & 0.90 \\
+Standard SIMEX & -0.059 & 0.030 & -0.050 & 0.85 & 0.90 & 0.92 \\
+Adaptive SIMEX (1-SE) & -0.094 & 0.047 & -0.079 & 0.80 & 0.89 & 0.81 \\
+Adaptive SIMEX (argmin) & -0.182 & 0.094 & -0.152 & 0.36 & 0.75 & 0.55 \\
+Oracle & -0.009 & -0.002 & -0.013 & 0.85 & 0.88 & 0.87 \\
+\bottomrule
+\end{tabular}
+\par\footnotesize \emph{Note:} RMSE ordering matches
+Table~\ref{tab:scenario1}; full RMSEs in the replication
+archive.
+\end{table}

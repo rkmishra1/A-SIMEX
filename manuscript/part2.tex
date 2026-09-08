@@ -1,0 +1,484 @@
+% ---------------------------------------------------------------------------
+% SECTION 4: ASYMPTOTIC THEORY (statements; proofs in Appendix A)
+% ---------------------------------------------------------------------------
+\section{Asymptotic Theory}\label{sec:theory}
+
+This section states the theoretical properties of the A-SIMEX
+estimator; complete proofs are collected in the Supplementary Material.
+Throughout, $\|\cdot\|$ is the Euclidean norm,
+$\rightarrow_p$ denotes convergence in probability,
+$\rightarrow_d$ convergence in distribution, and generic positive
+constants are written $C,c$.
+
+\subsection{Setup and Assumptions}\label{sec:assumptions}
+
+\begin{assumption}[Model and regularity]\label{ass:model}
+\leavevmode
+\begin{enumerate}\itemsep2pt
+\item[(a)] $Y_1,X_1,\beps_1,\dots,Y_n,X_n,\beps_n$ are i.i.d.;
+      $\E[Y_i\mid X_i]=\exp(X_i^\top\bet_0)$ with $\bet_0$ in the
+      interior of the compact convex set $\Theta\subset\R^p$.
+\item[(b)] $\E\|X_i\|^4<\infty$, $\E|Y_i|^2<\infty$, and
+      $\E[X_iX_i^\top]$ is positive definite.
+\item[(c)] The error satisfies Assumption~\ref{ass:cme}.
+\end{enumerate}
+\end{assumption}
+
+\begin{assumption}[Pseudo-design non-collinearity]\label{ass:pseudo}
+For every $\delta$ in a neighbourhood of $[-1,\lambda_{\max}+1]$ and
+every $\bet$ in a neighbourhood of $\bet_0$,
+\[
+  \btH(\bet,\delta)
+  := \E\Bigl[\exp\!\bigl(\bet^\top(X_i+\beps_\delta)\bigr)
+      (X_i+\beps_\delta)(X_i+\beps_\delta)^\top\Bigr]
+\]
+is positive definite, where
+$\beps_\delta\sim N(\bm 0,\delta\bSig_\epsilon)$; in particular
+$\inf_{\bet,\delta}\lambda_{\min}\bigl(\btH(\bet,\delta)\bigr)\ge c_H>0$.
+\end{assumption}
+
+\begin{assumption}[Simulation and grid]\label{ass:simgrid}
+The number of simulation replicates satisfies $B=B(n)\to\infty$. The
+grid $\Lambda_n$ has $K=K(n)$ equally spaced points on
+$[0,\lambda_{\max}]$ with $\lambda_{\max}\le\bar\lambda<\infty$ fixed,
+$K\to\infty$, and $K^2\log n=o(n)$.
+\end{assumption}
+
+\begin{assumption}[Extrapolation degree; consistency
+regime]\label{ass:degree}
+The degree grid is $\{1,\dots,d_{\max}(n)\}$ with
+$d_{\max}(n)\to\infty$, $d_{\max}(n)\le K(n)/4$, and the selected
+degree $\hat d_n$ satisfies $\hat d_n\to\infty$ in probability and
+$d_{\max}(n)^3/K(n)\to 0$.
+\end{assumption}
+
+\begin{assumption}[Selection stability; central limit
+regime]\label{ass:cv}
+The CV procedure selects $(\hat\lambda_{\max,n},\hat d_n)$ from a
+fixed finite grid $\mathcal G$ with
+$\Prob\bigl((\hat\lambda_{\max,n},\hat d_n)=(\lambda^*,d^*)\bigr)\to1$
+for some $(\lambda^*,d^*)\in\mathcal G$.
+\end{assumption}
+
+\begin{remark}\label{rem:cvreconcile}
+Assumptions~\ref{ass:degree} (degree grows: consistency) and
+\ref{ass:cv} (degree eventually constant: the CLT) describe
+complementary regimes; Theorem~\ref{thm:grow} reconciles them under an
+explicit window condition on a $c\log n$ degree growth rate.
+\end{remark}
+
+\begin{remark}\label{rem:assumptions}
+Three of these conditions correct or replace claims made in informal
+treatments. First, no condition of the form $B/\sqrt n\to\infty$ (with
+$B/n\to0$) is needed: the simulation component of the estimator is
+$O_p(B^{-1/2})$ at the $\sqrt n$ scale, so $B\to\infty$ suffices for
+all results. Second, a fixed polynomial degree cannot deliver
+consistency in general: the extrapolation approximation error does
+not vanish with $\lambda_{\max}$, which is why
+Assumption~\ref{ass:degree} lets the CV-selected degree grow;
+real-analyticity of the population curve
+(Lemma~\ref{lem:curve}) then makes the approximation error decay
+geometrically in the degree. Third, selection stability
+(Assumption~\ref{ass:cv}) replaces ``convergence with positive
+probability'' of the selected hyperparameters, which is too weak for a
+central limit theorem; the cross-validation criterion supports both
+regimes under verifiable conditions on the population risk
+(Lemma~\ref{lem:cv}).
+\end{remark}
+
+\subsection{The Population SIMEX Curve}\label{sec:population}
+
+Write $\delta=1+\lambda$ for the total error-variance multiplier and
+$\beps_\delta=\beps_i+\sqrt\lambda\,\bu_i\sim N(\bm 0,
+\delta\bSig_\epsilon)$ for the augmented error. Define the population
+objective and pseudo-true parameter
+\begin{equation}\label{eq:popobj}
+  Q(\bet;\delta)
+  =\E\Bigl[Y_i\,\bet^\top(X_i+\beps_\delta)
+      -\exp\bigl(\bet^\top(X_i+\beps_\delta)\bigr)\Bigr],
+  \qquad
+  \beta(\delta)=\argmax_{\bet\in\Theta}Q(\bet;\delta),
+\end{equation}
+and write $\beta(\lambda):=\beta(1+\lambda)$ for the population SIMEX
+curve.
+
+\begin{lemma}[Population representation, analyticity, and the
+extrapolation target]\label{lem:curve}
+Grant Assumptions~\ref{ass:model} and~\ref{ass:pseudo}. Then:
+\begin{enumerate}\itemsep2pt
+\item[(i)] $Q$ depends on $\delta$ only through
+      \[
+        Q(\bet;\delta)\;=\;\E\bigl[Y_iX_i^\top\bet\bigr]
+        \;-\;\E\Bigl[\exp\bigl(X_i^\top\bet\bigr)\Bigr]\,
+        \exp\!\Bigl(\tfrac{\delta}{2}\,\bet^\top\bSig_\epsilon\bet\Bigr),
+      \]
+      hence $Q(\cdot\,;\delta)$ is real-analytic in
+      $(\bet,\delta)$ on
+      $\operatorname{int}\Theta\times(-1-\eta,\bar\lambda+1)$ for some
+      $\eta>0$.
+\item[(ii)] The maximizer $\beta(\delta)$ exists, is unique, lies in
+      the interior of $\Theta$, and is real-analytic in $\delta$ on a
+      neighbourhood of $[-1,\bar\lambda+1]$.
+\item[(iii)] $\beta(-1)=\beta(0)=\bet_0$; moreover
+      $\beta(\delta)=\bet_0+\delta\,\tilde\bet+O(\delta^2)$ as
+      $\delta\downarrow0$, where, writing
+      $\bm g(\bet)=\E\bigl[e^{X_i^\top\bet}X_i\bigr]$ and
+      $M(\bet)=\E\bigl[e^{X_i^\top\bet}\bigr]$,
+      \begin{equation}\label{eq:bias1}
+        \tilde\bet
+        =-\btH(\bet_0,0)^{-1}\Bigl[
+          \tfrac12\bigl(\bet_0^\top\bSig_\epsilon\bet_0\bigr)\,
+          \bm g(\bet_0)\;+\;\bSig_\epsilon\bet_0\,M(\bet_0)
+        \Bigr],
+      \end{equation}
+      the leading-order bias of the naive estimator. For $p=1$,
+      $X\sim N(0,1)$:
+      $\tilde\beta=-\sigma^2_\epsilon\beta_0
+      (1+\beta_0^2/2)/(1+\beta_0^2)<0$ for $\beta_0>0$.
+\end{enumerate}
+\end{lemma}
+
+Two remarks on Lemma~\ref{lem:curve}. First, part~(iii) is the correct
+form of the intuition that ``at $\lambda=-1$ the augmented covariate
+equals $X$'': the simulated noise is independent of the observed error
+and can never be subtracted off; instead, the augmented covariate at
+level $\lambda$ is $X+\beps_\delta$ with \emph{total} error variance
+$\delta\,\bSig_\epsilon$, and the pseudo-true parameter depends on
+$\delta$ only through this total variance, so $\lambda=-1$
+corresponds to a pseudo-population with no error at all, giving
+$\beta(-1)=\bet_0$ exactly. Second, part~(i) is what drives every
+approximation result below: the Gaussian tilt makes the population
+curve real-analytic, so polynomial approximation error decays
+geometrically in the degree (Lemma~\ref{lem:approx}).
+
+\subsection{Uniform Convergence of the Empirical Curve}\label{sec:unif}
+
+Let
+$Q_n(\bet;\lambda,b)=n^{-1}\sum_{i=1}^n\bigl[
+Y_i\,W_i^{(b)}(\lambda)^\top\bet
+-\exp\{W_i^{(b)}(\lambda)^\top\bet\}\bigr]$ with
+$W_i^{(b)}(\lambda)=W_i+\sqrt\lambda\,U_{ib}$ and
+$\{U_{ib}\}$ i.i.d.\ $N(\bm 0,\bSig_\epsilon)$ across $i$ and $b$;
+$\hat\beta_b(\lambda)=\argmax_{\bet\in\Theta}Q_n(\bet;\lambda,b)$;
+$\bar\beta(\lambda)=B^{-1}\sum_b\hat\beta_b(\lambda)$; and
+$\bm H(\lambda):=\btH(\beta(\lambda),1+\lambda)$.
+
+\begin{lemma}[Uniform M-estimation over grid and
+replicates]\label{lem:unif}
+Grant Assumptions~\ref{ass:model}--\ref{ass:simgrid}. Then
+\[
+  \max_{0\le j<K}\ \max_{1\le b\le B}
+  \sup_{\bet\in\Theta}\bigl|Q_n(\bet;\lambda_j,b)-Q(\bet;1+\lambda_j)\bigr|
+  \;\xrightarrow{p}\;0,
+\]
+and consequently
+$\max_{j}\|\bar\beta(\lambda_j)-\beta(\lambda_j)\|
+=O_p(n^{-1/2})$ up to polylogarithms, with each
+$\hat\beta_b(\lambda_j)$ well defined and unique with probability
+tending to one.
+\end{lemma}
+
+\begin{lemma}[Extrapolation approximation error]\label{lem:approx}
+Grant Assumptions~\ref{ass:model}--\ref{ass:simgrid}. There exist
+constants $C,\rho>1$ depending only on the law of $(X_i,Y_i)$,
+$\bSig_\epsilon$, $\bar\lambda$ and the grid such that for all $d\ge1$,
+\[
+  \inf_{\deg(q)\le d}\ \sup_{\lambda\in[-1,\bar\lambda]}
+  \bigl\|q(\lambda)-\beta(\lambda)\bigr\|
+  \;\le\;C\rho^{-d}.
+\]
+Consequently, under Assumption~\ref{ass:degree}, the best
+degree-$\hat d_n$ approximation error is $o_p(n^{-1/2})$ whenever
+$d_{\max}(n)\ge c\log n$ for large enough $c$.
+\end{lemma}
+
+\begin{lemma}[Cross-validation and degree
+growth]\label{lem:cv}
+Let $\widehat R_n(\lambda_{\max},d)$ be the CV criterion
+\eqref{eq:cv} over the finite grid
+$\mathcal G_n=\Lambda_n^{\max}\times\{1,\dots,d_{\max}(n)\}$ and
+$R_n$ the population CV risk. If
+(i)~$\sup_{g\in\mathcal G_n}|\widehat R_n(g)-R_n(g)|=o_p(1)$;
+(ii)~$R_n(\lambda_{\max},d)\ge\rho^{-2d}(1-o(1))$ uniformly over
+$d\le d_0$ for every fixed $d_0$; and (iii)~$R_n$ is minimized over
+$d$ at some $\bar d_n\to\infty$, then the CV-selected degree
+$\hat d_n\to\infty$ in probability. If moreover the grid contains a
+fixed pair with a strict population minimum separated by more than
+$2\sup_g|\widehat R_n(g)-R_n(g)|=o_p(1)$, then
+Assumption~\ref{ass:cv} holds.
+\end{lemma}
+
+\subsection{Consistency}\label{sec:consistency}
+
+\begin{theorem}[Consistency of \asimex{}]\label{thm:cons}
+Grant Assumptions~\ref{ass:model}--\ref{ass:degree}. Then
+$\hat\beta_{\asimex}\xrightarrow{p}\bet_0$. If
+$d_{\max}(n)\ge c\log n$ eventually, then
+$\|\hat\beta_{\asimex}-\bet_0\|=O_p(\rho^{-\hat d_n})
++O_p\bigl(\sqrt{d_{\max}(n)/K(n)}\,n^{-1/2}\bigr)+O_p(n^{-1/2})$.
+\end{theorem}
+
+\subsection{Asymptotic Normality and the Exact Variance
+Decomposition}\label{sec:an}
+
+For the central limit theorem we work in the fixed-hyperparameter
+regime of Assumption~\ref{ass:cv}. To lighten notation write
+$d=d^*$, $\lambda_{\max}=\lambda^*$, and
+$\bphi(\lambda)=(1,\lambda,\dots,\lambda^d)^\top$. Define the
+per-replicate influence score at grid point $\lambda_j$,
+\[
+  \bm m_{ib}(\lambda_j)
+  =\Bigl[Y_i-\exp\bigl(\beta(\lambda_j)^\top W_i^{(b)}(\lambda_j)\bigr)\Bigr]
+   W_i^{(b)}(\lambda_j),
+\]
+whose conditional mean given $(Y_i,X_i,\beps_i)$ does not depend on
+$b$ and has zero unconditional mean at $\beta(\lambda_j)$; and the
+matrices
+\begin{align}
+  \btV^{\mathrm{data}}
+  &=\Cov\Bigl(\E\bigl[\bm m_{ib}(\lambda_j)\mid
+        Y_i,X_i,\beps_i\bigr]\Bigr)_{j,k=0}^{K-1}
+   \in\R^{Kp\times Kp},\label{eq:vdata}\\
+  \btV^{\mathrm{sim}}
+  &=\Cov\Bigl(\bm m_{ib}(\lambda_j)-\E[\bm m_{ib}(\lambda_j)\mid
+        Y_i,X_i,\beps_i]\Bigr)_{j,k}
+   \in\R^{Kp\times Kp},\label{eq:vsim}
+\end{align}
+the covariance contributed by the data and by the simulated errors,
+stacked across the grid. Let
+$\btH=\operatorname{blockdiag}(\bm H(\lambda_0),\dots,
+\bm H(\lambda_{K-1}))$,
+$\bm M=\bI_{p}\otimes[(\bPhi^\top\bPhi)^{-1}\bPhi^\top]$ the
+least-squares extrapolation map, and
+$\bm v_{-1}:=\bI_p\otimes\bphi(-1)$, so that
+$\hat\beta_{\asimex}=\bm v_{-1}^\top\bm M\bar\beta_\Lambda$ with
+$\bar\beta_\Lambda=(\bar\beta(\lambda_0)^\top,\dots,
+\bar\beta(\lambda_{K-1})^\top)^\top$.
+
+\begin{theorem}[Asymptotic normality of \asimex{}]\label{thm:an}
+Grant Assumptions~\ref{ass:model}--\ref{ass:pseudo} and~\ref{ass:cv},
+with $B\to\infty$ and fixed $K$, $\lambda_{\max}$, $d$. Then
+\[
+  \sqrt n\bigl(\hat\beta_{\asimex}-\bet_0\bigr)
+  \;\xrightarrow{d}\;N\bigl(\bm 0,\bSig_{\asimex}\bigr),
+\]
+with the exact decomposition
+\begin{equation}\label{eq:decomp}
+  \bSig_{\asimex}
+  \;=\;\bSig_{\mathrm{data}}\;+\;\tfrac1B\,\bSig_{\mathrm{sim}},
+  \qquad
+  \bSig_{\mathrm{data}}=\bm v_{-1}^\top\bm M\,
+    \btH^{-1}\btV^{\mathrm{data}}\btH^{-1}\bm M^\top\bm v_{-1},
+\end{equation}
+and $\bSig_{\mathrm{sim}}$ defined analogously with
+$\btV^{\mathrm{sim}}$ in place of $\btV^{\mathrm{data}}$. In
+particular the simulation component vanishes for any rate
+$B\to\infty$, including $B=o(n)$.
+\end{theorem}
+
+\begin{remark}[Correction to the additive
+decomposition]\label{rem:decomp}
+The asymptotic variance is the propagated influence covariance
+\eqref{eq:decomp} of the pseudo-estimators at the grid points. An
+additive split $\bSig_{\mathrm{param}}+\bSig_{\mathrm{extrap}}$ with
+$\bSig_{\mathrm{param}}=\bm I_W(\bet_0)^{-1}$ (the information of the
+naive working model) does not hold: the A-SIMEX estimator is a fixed
+weighted average $\sum_jc_j\bar\beta(\lambda_j)$ of the grid-point
+estimators with $\sum_jc_j=1$, the grid-point influence functions are
+strongly (asymptotically perfectly, for small error) correlated, and
+the naive information enters only through this correlation structure.
+The correct additive split is between data and simulation sources of
+randomness, with the simulation term exactly $O(B^{-1})$.
+\end{remark}
+
+\begin{corollary}[Variance estimation]\label{cor:var}
+Under the conditions of Theorem~\ref{thm:an}, the plug-in estimator
+described in Section~\ref{sec:var} (sample-analogue
+$\bm H_j$ from the replicate-level information matrices, and empirical
+covariance matrices of the estimated conditional influence means and
+residuals) is consistent for $\bSig_{\asimex}$; equivalently, the
+pairs-bootstrap (redrawing both data and simulated errors) is
+consistent.
+\end{corollary}
+
+\subsection{The Growing-Degree Regime}\label{sec:growing}
+
+Map $[0,\bar\lambda]$ affinely to $[-1,1]$ by
+$t(\lambda)=2\lambda/\bar\lambda-1$, so that $\lambda=-1$ maps to
+$t_0=-1-2/\bar\lambda<-1$, and define the extrapolation conditioning
+constant
+\[
+  \kappa:=|t_0|+\sqrt{t_0^2-1}
+  =1+\tfrac{2}{\bar\lambda}
+   +\sqrt{\bigl(1+\tfrac{2}{\bar\lambda}\bigr)^2-1}\;>\;1,
+\]
+the Bernstein parameter of $t_0$: by the Chebyshev extremal property,
+any polynomial $q$ of degree $k$ satisfies
+$|q(t_0)|\le\kappa^{k}\sup_{[-1,1]}|q|$ \citep{rivlin1969}.
+
+\begin{lemma}[Extrapolation operator bounds]\label{lem:extrap}
+Let $K\ge c_0d^2$ equispaced points on $[0,\bar\lambda]$,
+$\{\varphi_k\}_{k=0}^{d}$ the polynomials orthonormal with respect to
+the discrete inner product $K^{-1}\sum_jf(\lambda_j)g(\lambda_j)$, and
+$L_{K,d}(h)=\sum_jc_jh(\lambda_j)$ the ``least-squares degree-$d$ fit
+evaluated at $\lambda=-1$'' functional. Then:
+(i)~$\sum_{k=0}^{d}\varphi_k(t_0)^2\le C\,d\,\kappa^{2d}$;
+(ii)~$\sum_j|c_j|\le C\,d^{1/2}K\kappa^{d}$ and
+$L_{K,d}(q)=q(-1)$ for every polynomial of degree $\le d$;
+(iii)~for every $h$ real-analytic on a neighbourhood of
+$[-1,\bar\lambda]$ with analytic continuation bounded by $M$ on the
+Bernstein ellipse $E_\rho$,
+$\bigl|L_{K,d}(h)-h(-1)\bigr|\le C M d^{3/2}K\kappa^{d}\rho^{-d}$.
+\end{lemma}
+
+\begin{theorem}[Growing-degree central limit theorem]\label{thm:grow}
+Grant Assumptions~\ref{ass:model}--\ref{ass:simgrid} with
+$K(n)\ge c_0d_n^2$ equispaced points and $B\to\infty$. Suppose the
+selected degree satisfies $\hat d_n/d_n\xrightarrow{p}1$ for a
+deterministic sequence $d_n=\lceil c\log n\rceil$, and that the
+analyticity margin $\rho>\kappa$ holds with
+$c\in\bigl(\tfrac{1}{2\log\rho},\tfrac{1}{2\log\kappa}\bigr)$, an
+interval that is nonempty exactly when $\rho>\kappa$. Then
+\[
+  \sqrt n\bigl(\hat\beta_{\asimex}-\bet_0\bigr)
+  \;\xrightarrow{d}\;N\bigl(\bm 0,\bSig_*\bigr),
+  \qquad
+  \bSig_*=\bm I_X(\bet_0)^{-1}\,\widetilde{\bm Z}\,
+           \bm I_X(\bet_0)^{-1},
+\]
+where $\widetilde{\bm Z}$ is the value at $(-1,-1)$ of the analytic
+continuation of the influence covariance
+$\bm\Gamma(\lambda,\lambda')
+=\Cov(\bm\psi_1(\lambda),\bm\psi_1(\lambda'))$ of the data-influence
+process $\bm\psi(\lambda)=\E[\bm m_{ib}(\lambda)\mid Y_i,X_i,\beps_i]$,
+and $\bm I_X(\bet_0)=\btH(-1)$. The simulation component contributes
+$O(B^{-1})$, and the extrapolation bias is $o(n^{-1/2})$, so the limit
+is centered at $\bet_0$. In particular
+$\bSig_*\to\bSig_{\mathrm{oracle}}$ as $\sigma^2\to0$.
+\end{theorem}
+
+The window condition has a transparent reading: $\rho$ measures how
+far the analytic continuation of the curve extends (bias side),
+$\kappa$ how violently degree-$d$ extrapolation outside the grid
+amplifies noise (variance side); growing-degree inference is feasible
+precisely when the former dominates the latter. If $\rho\le\kappa$,
+the fixed-degree central limit theorem (Theorem~\ref{thm:an}) is the
+appropriate inference tool.
+
+\subsection{Efficiency Relative to the Oracle}\label{sec:are}
+
+Let $\bSig_{\mathrm{oracle}}=\bm I_X(\bet_0)^{-1}$ and define the
+generalized asymptotic relative efficiency
+$\mathrm{ARE}=\det(\bSig_{\mathrm{oracle}})/
+\det(\bSig_{\asimex})$. Three information matrices must be
+distinguished: the oracle information $\bm I_X(\bet_0)$; the
+information $\bm I(t)$ of the observed-data model
+$(Y_i,\widetilde W_t)$, $\widetilde W_t=X_i+\bm e_t$ with
+$\bm e_t\sim N(\bm 0,t\bSig_0)$; and the information of the naive
+\emph{working} model $\E[e^{W^\top\bet_0}WW^\top]$, a curvature of a
+misspecified likelihood that plays no role in the correct theory.
+
+\begin{lemma}[Information monotonicity under additive
+noise]\label{lem:info}
+Grant Assumption~\ref{ass:model} with $\bSig_0$ fixed. Then:
+(i)~$\bm I(t_2)\preceq\bm I(t_1)$ for $0\le t_1\le t_2$; in
+particular $\bm I(t)\preceq\bm I(0)=\bm I_X(\bet_0)$; (ii)~the
+inequality is strict for $t>0$ provided $X_i$ is not a.s.\ constant.
+Consequently
+$\bSig_{\mathrm{oracle}}\preceq\bm I(t)^{-1}$ for all $t\ge0$, and by
+the H\'ajek convolution theorem $\bm I(t)^{-1}$ is the best asymptotic
+covariance achievable by any regular estimator based on
+$(Y_i,\widetilde W_t)$ alone.
+\end{lemma}
+
+\begin{theorem}[Efficiency relative to the oracle]\label{thm:are}
+Grant the conditions of Theorem~\ref{thm:an} with $B\to\infty$, and
+suppose $\bSig_\epsilon=\sigma^2\bSig_0$ with $\bSig_0$ fixed and
+$\sigma^2\downarrow0$, all else fixed. Write
+$\bSig_{\asimex}(\sigma^2)$ for the asymptotic covariance of
+Theorem~\ref{thm:an} at error scale $\sigma^2$. Then:
+\begin{enumerate}\itemsep2pt
+\item[(i)] \textbf{(First-order efficiency.)}
+      $\bSig_{\asimex}(\sigma^2)\to\bSig_{\mathrm{oracle}}$ as
+      $\sigma^2\to0$, for every fixed grid and degree: the limit is
+      exact.
+\item[(ii)] \textbf{(Explicit second-order term.)}
+      $\bSig_{\asimex}(\sigma^2)
+      =\bSig_{\mathrm{oracle}}+\sigma^2\,\dot{\bm C}_\beta+O(\sigma^4)$,
+      where $\dot{\bm C}_\beta$ is the symmetric, explicitly
+      computable matrix
+      \begin{equation}\label{eq:cdot}
+        \dot{\bm C}_\beta
+        =\bm v_{-1}^\top\bm M\,\bm H_0^{-1}
+        \Bigl(\dot{\btV}-\dot{\btH}\bm H_0^{-1}\bm V_0
+              -\bm V_0\bm H_0^{-1}\dot{\btH}\Bigr)
+        \bm H_0^{-1}\bm M^\top\bm v_{-1},
+      \end{equation}
+      with $\bm H_0=\bI_K\otimes\bm I_X(\bet_0)$,
+      $\bm V_0=(\bm 1_K\bm 1_K^\top)\otimes\bm I_X(\bet_0)$, and
+      \begin{align}
+        \dot{\btH}_j
+        &=\tfrac{\delta_j}{2}\bigl(\bet_0^\top\bSig_0\bet_0\bigr)\bm I_X
+          +\delta_j\,\E\bigl[e^{\bet_0^\top X}
+             (\tilde\bet_{\bSig_0}^\top X)XX^\top\bigr]
+          +\bSig_0\bet_0\,\bm g_0^\top+\bm g_0\,\bet_0^\top\bSig_0,
+          \label{eq:hdot}\\
+        \dot{\btV}_{jk}
+        &=\Cov\bigl(\dot{\bm\psi}_j,\bm\psi^{(0)}\bigr)
+         +\Cov\bigl(\bm\psi^{(0)},\dot{\bm\psi}_k\bigr),
+        \nonumber\\
+        \dot{\bm\psi}_j
+        &=-e^{\bet_0^\top X}
+         \Bigl[\bigl(\delta_j\tilde\bet_{\bSig_0}^\top X
+                +\tfrac{\lambda_j}{2}\bet_0^\top\bSig_0\bet_0\bigr)X
+               +\lambda_j\bSig_0\bet_0\Bigr],
+        \label{eq:vdot}
+      \end{align}
+      where $\delta_j=1+\lambda_j$,
+      $\bm g_0=\E[e^{\bet_0^\top X}X]$, and
+      $\bm\psi^{(0)}=YX-e^{\bet_0^\top X}X$ is the oracle influence
+      function. In general $\dot{\bm C}_\beta$ is
+      \emph{indefinite}: neither
+      $\dot{\bm C}_\beta\succeq\bm 0$ nor
+      $\dot{\bm C}_\beta\preceq\bm 0$ holds universally.
+\item[(iii)] \textbf{(Determinant expansion.)}
+      $\mathrm{ARE}=1+\sigma^2\kappa_\beta+O(\sigma^4)$ with
+      $\kappa_\beta=-\operatorname{tr}
+      (\bSig_{\mathrm{oracle}}^{-1}\dot{\bm C}_\beta)$ of no universal
+      sign. The universal statements are: (a)~$\mathrm{ARE}\to1$ as
+      $\sigma^2\to0$; (b)~by Lemma~\ref{lem:info}, no regular
+      estimator based on the noisy covariates alone can improve on the
+      oracle to first order; and (c)~\asimex{} attains this frontier
+      to first order, its excess over $\bSig_{\mathrm{oracle}}$ being
+      second-order with a bias--variance trade-off reflected in the
+      sign of $\kappa_\beta$.
+\end{enumerate}
+\end{theorem}
+
+\begin{remark}[Why a positive-semidefiniteness claim would be
+false]\label{rem:psd}
+Measurement error attenuates the signal but can also de-noise the
+estimating directions: in the homoskedastic linear model
+$Y=X\beta_0+e$, $W=X+\epsilon$, the naive slope's asymptotic variance
+$\sigma_e^2/\E[W^2]$ is \emph{smaller} than the oracle's
+$\sigma_e^2/\E[X^2]$, and the second-order variance term inherits this
+negative sign; since A-SIMEX is a biased estimator, it is not subject
+to the Cram\'er--Rao bound of the observed-data model. The universal
+content is part~(iii): the oracle marks the first-order frontier,
+A-SIMEX reaches it, and the second-order gap splits into the
+deterministic extrapolation bias
+$\sigma^2(\sum_jc_j\delta_j)\tilde\bet_{\bSig_0}$ (zero for suitable
+grids) plus the symmetric variance correction \eqref{eq:cdot} of
+indefinite sign.
+\end{remark}
+
+\begin{corollary}[Explicit scalar constants]\label{cor:scalar}
+For $p=1$ the first-order naive bias is
+$\tilde\beta=-\sigma^2\bigl[\tfrac12\beta_0^2\mu_1(\beta_0)
++\beta_0\mu_0(\beta_0)\bigr]/\mu_2(\beta_0)$ with
+$\mu_r(\beta)=\E[e^{\beta X}X^r]$ (for $X\sim N(0,1)$,
+$-\sigma^2\beta_0(1+\beta_0^2/2)/(1+\beta_0^2)$), and the
+second-order ARE constant $\kappa_\beta$ is an explicit functional of
+$\{\mu_r(\beta_0)\}_{r\le4}$ and the grid weights $\{c_j\}$, given in
+the Supplementary Material (Section~S1).
+\end{corollary}

@@ -1,0 +1,59 @@
+% ---------------------------------------------------------------------------
+% SECTION 7: TEMPORAL TRANSFER (NHANES 2015-2016)  [new second application]
+% ---------------------------------------------------------------------------
+\section{Temporal Transfer of the Calibrated Error Variance: NHANES
+2015--2016}\label{sec:transfer}
+
+A practitioner applying the method in real time cannot calibrate the
+error variance on the data at hand if the validation measurement is
+only collected later. This section therefore asks the question that
+matters for practice: does the error variance calibrated on one survey
+cycle transfer to another? We re-estimate the application of
+Section~\ref{sec:app} on the previous NHANES cycle, 2015--2016
+(DEMO\_H, BMX\_H, WHQ\_H, RXQ\_RX\_H), with the identical outcome
+(number of prescription medications), the identical error-prone
+covariate (self-reported weight), and the identical specification, but
+we feed the methods the error variance calibrated on the 2017--2018
+cycle ($\hat\sigma^2_\epsilon = 24.1\,\mathrm{kg}^2$) instead of
+estimating it within the 2015--2016 sample. The within-cycle
+calibration is available here as a benchmark: the 2015--2016
+self-report minus measured differences have mean $-0.69$\,kg and
+variance $21.8\,\mathrm{kg}^2$, so the transferred variance is about
+$10\%$ larger than the cycle would calibrate on its own.
+
+Table~\ref{tab:transfer} and Figure~\ref{fig:transfer} report the
+results for $n = 6{,}100$. Three facts stand out. First, the ranking
+and spacing of methods reproduces the 2017--2018 application: the
+naive estimate is $+1.445$ per 10\,kg, the corrections cluster between
+$+1.474$ (argmin) and $+1.526$ (regression calibration, corrected score,
+standard SIMEX, and A-SIMEX 1-SE), and the measured-weight anchor is $+1.323$, below the
+corrected estimates as in Section~\ref{sec:app}, consistently with the
+nonclassical component of self-report error. Second, the transferred
+and within-cycle calibrations deliver essentially identical estimates:
+the largest gap across methods and variance inputs is
+$0.009$, well under one standard error ($0.083$). A $10\%$
+misstatement of the error variance moves the corrected estimates by a
+negligible amount, exactly as the sensitivity analysis of
+Section~\ref{sec:app-sens} predicted. Third, the CV layer again
+selects minimal extrapolation and remains stable across cycles.
+
+The practical reading for applied work: a laboratory that has
+calibrated its measurement error once (here, a national survey cycle)
+can carry that calibration to the next wave, and the correction
+inherits the calibration error only in a attenuated form. The
+temporal stability of $\hat\sigma^2_\epsilon$ itself ($24.1$ on the
+2017--2018 complete-case sample versus $21.8$ here) is a property of
+the survey instrument rather than of the method, and its drift is
+visible in the small difference between the transferred and
+within-cycle columns.
+
+\input{../results/transfer_table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=.8\textwidth]{fig8_transfer.pdf}
+\caption{NHANES 2015--2016: weight coefficients (per 10\,kg, 95\% CIs)
+with the transferred (green circles) and within-cycle (purple squares)
+error variance. Dashed: measured weight (anchor); dotted: naive.}
+\label{fig:transfer}
+\end{figure}

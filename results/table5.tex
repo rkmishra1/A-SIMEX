@@ -1,0 +1,26 @@
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Estimated error variance from $m=2$ replicated measures:
+methods receive $\hat\sigma^2_\epsilon$ from the replicate
+differences rather than the true $\sigma^2_\epsilon=0.5$
+($n=500$, $p=3$, $M=1{,}000$; $\beta_1$ entries; coverage of the
+naive and oracle fits is unaffected by $\hat\sigma^2$).}
+\label{tab:sigma2-est}
+\begin{tabular}{l rrr}
+\toprule
+Method & Bias & RMSE & Cov. \\
+\midrule
+Naive$^{\dagger}$ & -0.137 & 0.149 & 0.27 \\
+Regression calibration & 0.084 & 0.117 & 0.73 \\
+Corrected score & 0.034 & 0.102 & 0.87 \\
+Standard SIMEX & -0.004 & 0.082 & 0.92 \\
+Adaptive SIMEX (1-SE) & -0.026 & 0.083 & 0.86 \\
+Adaptive SIMEX (argmin) & -0.091 & 0.111 & 0.61 \\
+Oracle$^{\dagger}$ & 0.004 & 0.023 & 0.92 \\
+\bottomrule
+\end{tabular}
+\par\footnotesize \emph{Note:} $^{\dagger}$does not use
+$\sigma^2_\epsilon$. Mean of $\hat\sigma^2_\epsilon$
+across repetitions: 0.499 (MC s.e.\ 0.001).
+\end{table}

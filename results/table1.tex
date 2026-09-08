@@ -1,0 +1,34 @@
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Scenario 1 (low-dimensional, strong signal): bias, RMSE,
+and 95\% coverage of $\hat\beta_1$ over $M=1{,}000$ Monte Carlo
+repetitions. MC standard errors of bias and coverage are at most
+$0.005$ and $0.022$ respectively.}
+\label{tab:scenario1}
+\begin{tabular}{l rrr rrr rrr}
+\toprule
+& \multicolumn{3}{c}{$\sigma^2_\epsilon = 0.1$} & \multicolumn{3}{c}{$\sigma^2_\epsilon = 0.5$} & \multicolumn{3}{c}{$\sigma^2_\epsilon = 1.0$} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+Method & Bias & RMSE & Cov. & Bias & RMSE & Cov. & Bias & RMSE & Cov. \\
+\midrule
+\multicolumn{10}{l}{\emph{$n = 500$}} \\
+Naive & -0.070 & 0.082 & 0.57 & -0.245 & 0.252 & 0.02 & -0.384 & 0.394 & 0.03 \\
+Regression calibration & 0.024 & 0.054 & 0.84 & 0.140 & 0.171 & 0.63 & 0.245 & 0.320 & 0.47 \\
+Corrected score & -0.001 & 0.048 & 0.89 & 0.058 & 0.171 & 0.82 & -0.014 & 0.735 & 0.81 \\
+Standard SIMEX & -0.009 & 0.049 & 0.90 & -0.057 & 0.109 & 0.82 & -0.155 & 0.208 & 0.52 \\
+Adaptive SIMEX (1-SE) & -0.015 & 0.050 & 0.91 & -0.088 & 0.125 & 0.70 & -0.200 & 0.240 & 0.31 \\
+Adaptive SIMEX (argmin) & -0.048 & 0.065 & 0.78 & -0.183 & 0.195 & 0.25 & -0.260 & 0.297 & 0.24 \\
+Oracle & -0.004 & 0.024 & 0.95 & -0.002 & 0.023 & 0.91 & -0.002 & 0.022 & 0.96 \\
+\midrule
+\multicolumn{10}{l}{\emph{$n = 1000$}} \\
+Naive & -0.066 & 0.075 & 0.35 & -0.239 & 0.244 & 0.02 & -0.384 & 0.387 & 0.00 \\
+Regression calibration & 0.028 & 0.049 & 0.82 & 0.145 & 0.166 & 0.43 & 0.235 & 0.257 & 0.25 \\
+Corrected score & 0.001 & 0.042 & 0.86 & 0.040 & 0.115 & 0.87 & 0.136 & 0.292 & 0.98 \\
+Standard SIMEX & -0.005 & 0.042 & 0.88 & -0.051 & 0.084 & 0.83 & -0.149 & 0.164 & 0.45 \\
+Adaptive SIMEX (1-SE) & -0.011 & 0.042 & 0.84 & -0.077 & 0.104 & 0.71 & -0.191 & 0.203 & 0.22 \\
+Adaptive SIMEX (argmin) & -0.044 & 0.057 & 0.58 & -0.177 & 0.185 & 0.09 & -0.274 & 0.289 & 0.13 \\
+Oracle & 0.000 & 0.016 & 0.94 & 0.001 & 0.017 & 0.95 & -0.000 & 0.017 & 0.92 \\
+\bottomrule
+\end{tabular}
+\end{table}

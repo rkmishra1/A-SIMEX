@@ -1,0 +1,99 @@
+% ===========================================================================
+% APPENDIX B: IMPLEMENTATION DETAILS
+% ===========================================================================
+\appendix
+\setcounter{section}{1}\renewcommand{\thesection}{\Alph{section}}
+\setcounter{subsection}{0}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\setcounter{table}{0}
+\renewcommand{\thetable}{B\arabic{table}}
+
+\section{Implementation Details}\label{app:implementation}
+
+\subsection*{Package Structure}\label{sec:package}
+
+\begin{center}
+\small
+\begin{tabular}{ll}
+\toprule
+\texttt{adaptsimex/}\\
+\quad\texttt{R/main.R} & main \texttt{adaptive\_simex()} driver\\
+\quad\texttt{R/cv\_select.R} & cross-validation for
+$(\lambda_{\max},\text{degree})$ (prefix property, 1-SE rule)\\
+\quad\texttt{R/variance.R} & analytic sandwich (equation~3.4 of the main text)
+and pairs-bootstrap\\
+\quad\texttt{R/methods.R} & S3 methods: print, summary, confint, plot\\
+\quad\texttt{src/simex\_batch.cpp} & optional Rcpp batching of the
+replicate-level IRLS\\
+\quad\texttt{vignettes/} & quick start; theory; NHANES case study\\
+\quad\texttt{tests/testthat/} & unit tests (attenuation direction,
+sandwich vs.\ bootstrap)\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection*{Main Function and Usage}\label{sec:usage}
+
+\begin{center}
+\small
+\begin{minipage}{0.93\textwidth}
+\texttt{adaptive\_simex(formula, data, me\_vars, sigma\_error,\\
+\quad lambda\_max\_seq = NULL, poly\_degree\_seq = 1:3,\\
+\quad n\_simex = 100, n\_cv\_folds = 5,\\
+\quad se\_method = c("sandwich", "bootstrap"), n\_boot = NULL,\\
+\quad parallel = TRUE, n\_cores = NULL, verbose = TRUE)}\\
+Returns an object of class \texttt{c("adaptive\_simex", "glm")} with
+slots \texttt{coefficients}, \texttt{vcov}, \texttt{se},
+\texttt{selected\_lambda\_max}, \texttt{selected\_poly\_degree},
+\texttt{cv\_results}, and \texttt{call}.
+\end{minipage}
+\end{center}
+
+\noindent Here \texttt{me\_vars} names the error-contaminated columns
+and \texttt{sigma\_error} their standard deviations;
+\texttt{se\_method = "sandwich"} uses \eqref{eq:sandwich}, and
+\texttt{"bootstrap"} the pairs-bootstrap recommended at small $n$
+(main text, Section~5.7). A typical call:
+
+\begin{center}
+\small
+\begin{minipage}{0.93\textwidth}
+\texttt{fit <- adaptive\_simex(Y \textasciitilde W1 + W2 + X3, data = df,\\
+\quad me\_vars = c("W1","W2"), sigma\_error = c(0.3, 0.3),\\
+\quad n\_simex = 100, se\_method = "sandwich", parallel = TRUE)}\\
+\texttt{summary(fit); confint(fit); plot(fit)}
+\end{minipage}
+\end{center}
+
+\subsection*{Computational Complexity and Parallelization}\label{sec:complexity}
+
+
+Three implementation ideas reduce the cost far below naive estimates.
+First, all $B$ SIMEX replicates at a grid point are fitted by one
+\emph{batched} IRLS sweep: the score and Hessian accumulations are
+tensor contractions over a $(B,n,p)$ array, so the $B$ fits share the
+linear-algebra machinery. Second, the CV procedure exploits the
+\emph{prefix property} of the SIMEX grid: one union-grid curve per
+fold (with noise shared across $\lambda$ within a replicate, per
+Algorithm~1) serves all candidate $\lambda_{\max}$, reducing the
+number of fitted pseudo-samples per fold from
+$|\mathcal K_\lambda|\cdot|\Lambda|\,B_{\mathrm{cv}}$ to
+$|\Lambda|\,B_{\mathrm{cv}}$. Third, fits along the curve are warm
+started from the previous grid point. Measured single-core times for
+the full A-SIMEX fit (CV plus final curve plus sandwich) are $0.10$,
+$0.28$, $0.95$, and $3.3$\,seconds at $(n{=}200,p)\in
+\{5,15,30,50\}$ with $B=100$, $B_{\mathrm{cv}}=25$; standard SIMEX is
+about twice as fast, and the corrected-score estimator is one to two
+orders of magnitude cheaper but numerically fragile
+(main text, Section~5.3). The asymptotic complexity per replication
+remains $O(B\,|\Lambda|\,n p^2)$ for the final curve plus
+$O(5\,|\Lambda|\,B_{\mathrm{cv}}\,n p^2)$ for the CV, but the
+constants are small enough that parallelization over Monte Carlo
+repetitions, CV folds, or grid points, all of them embarrassingly
+parallel and all supported by the package through the
+\texttt{future}/\texttt{furrr} backends, is a matter of convenience
+rather than necessity on modern hardware.
+
+% ---------------------------------------------------------------------------
+% SECTION 8: DISCUSSION (revised)
+

@@ -1,0 +1,29 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Temporal transfer, NHANES 2015--2016 ($n=6100$):
+Poisson regression of the number of prescription medications on
+self-reported weight (coefficient per 10\,kg, robust standard
+errors). The transferred column feeds the methods the error
+variance calibrated on the 2017--2018 cycle
+($\hat\sigma^2_\epsilon = 24.1\,\mathrm{kg}^2$);
+the within column re-estimates it from the 2015--2016
+self-report minus measured differences
+($\hat\sigma^2_\epsilon = 21.8\,\mathrm{kg}^2$).}
+\label{tab:transfer}
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{2}{c}{Transferred $\hat\sigma^2_\epsilon$} & \multicolumn{2}{c}{Within-cycle $\hat\sigma^2_\epsilon$} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Method & $\hat\beta$ & SE & $\hat\beta$ & SE \\
+\midrule
+Naive (self-reported weight) & +1.445 & (0.079) & +1.445 & (0.079) \\
+Regression calibration & +1.526 & (0.084) & +1.518 & (0.083) \\
+Corrected score (Nakamura) & +1.526 & (0.083) & +1.518 & (0.082) \\
+Standard SIMEX & +1.523 & (0.083) & +1.518 & (0.083) \\
+Adaptive SIMEX (1-SE rule) & +1.523 & (0.083) & +1.514 & (0.082) \\
+Adaptive SIMEX (argmin) & +1.474 & (0.081) & +1.475 & (0.081) \\
+Measured weight (anchor) & +1.323 & (0.077) & +1.323 & (0.077) \\
+\bottomrule
+\end{tabular}
+\end{table}
