@@ -1,0 +1,22 @@
+# Keep GitHub's language stats focused on the source, not vendored data/output.
+data/**            linguist-vendored
+results/raw/**     linguist-generated
+results/*.pdf      linguist-generated
+manuscript/*.pdf   linguist-generated
+adaptsimex/*.tar.gz binary
+adaptsimex/*.tgz    binary
+
+# Treat research data / binary artifacts as binary (no line-ending munging, no diffs).
+*.XPT   binary
+*.xpt   binary
+*.npz   binary
+*.pdf   binary
+*.spl   binary
+*.zip   binary
+
+# Normalise line endings for text sources.
+*.py    text eol=lf
+*.R     text eol=lf
+*.Rd    text eol=lf
+*.tex   text eol=lf
+*.md    text eol=lf

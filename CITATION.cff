@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software or replication archive, please cite the paper below."
+title: "adaptsimex: Adaptive SIMEX for Poisson Regression with Classical Measurement Error"
+abstract: >-
+  Replication archive and R package for Adaptive SIMEX (A-SIMEX), which corrects
+  classical covariate measurement error in Poisson regression via
+  simulation-extrapolation with cross-validated hyperparameters, a two-stage
+  ridge extrapolation, and an analytic sandwich variance estimator.
+type: software
+license: GPL-3.0
+repository-code: "https://github.com/rkmishra1/A-SIMEX"
+version: "0.1.0"
+authors:
+  - family-names: Garg
+    given-names: Gaurav
+    email: ggarg@iiml.ac.in
+    affiliation: "Indian Institute of Management Lucknow"
+  - family-names: Mishra
+    given-names: Ramakrushna
+keywords:
+  - measurement error
+  - Poisson regression
+  - SIMEX
+  - simulation extrapolation
+  - sandwich variance
+  - NHANES
+preferred-citation:
+  type: article
+  title: "Adaptive SIMEX for Poisson Regression with Classical Measurement Error: Theory, Methods, and Applications"
+  authors:
+    - family-names: Garg
+      given-names: Gaurav
+    - family-names: Mishra
+      given-names: Ramakrushna
+  year: 2026
+  notes: "Manuscript under review."

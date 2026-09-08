@@ -4,6 +4,28 @@
 # Python
 __pycache__/
 *.pyc
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
 
-# R package check build output (regenerable via R CMD check)
+# R
+.Rhistory
+.RData
+.Rproj.user/
 adaptsimex/adaptsimex.Rcheck/
+
+# LaTeX build artifacts (sources are tracked; aux files are regenerable)
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.out
+*.synctex.gz
+*.toc
+manuscript/*.log
+results/*.log

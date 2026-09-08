@@ -1,0 +1,5 @@
+# Python dependencies for the Adaptive SIMEX replication pipeline (code/).
+# numpy 1.25+ is required for SeedSequence-based bit-reproducibility.
+numpy>=1.25
+pandas
+matplotlib
